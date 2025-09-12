@@ -4,9 +4,11 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from core.config import settings
+from core.s3_cloud_connector import S3CloudConnector
 from db.models import User
 from services.auth_service import get_bearer_token, verify_token, _unauthorized, check_active_and_confirmed_user, \
     _forbidden
+from services.exercise_service import ExerciseServices
 from services.user_versice import UserServices
 
 
@@ -23,8 +25,12 @@ async def get_db():
 def user_services(session: AsyncSession = Depends(get_db)) -> UserServices:
     return UserServices(session)
 
+def exercise_services(session: AsyncSession = Depends(get_db)) -> ExerciseServices:
+    return ExerciseServices(session)
 
 
+def get_s3_connector() -> S3CloudConnector:
+    return S3CloudConnector()
 
 def require_user_attrs(
         is_admin: Optional[bool] = False,

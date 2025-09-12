@@ -6,9 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from db.models import User
+from repositories.base_repositoriey import BaseRepo
 
 
-class UserRepository:
+class UserRepository(BaseRepo):
     def __init__(self, session: AsyncSession):
         self.session = session
         self.model = User

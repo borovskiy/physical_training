@@ -33,3 +33,5 @@ class User(Base):
     exercises: Mapped[List["Exercise"]] = relationship(back_populates="owner", cascade="all, delete-orphan")
     workouts: Mapped[List["Workout"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     groups: Mapped[List["Group"]] = relationship(back_populates="owner", cascade="all, delete-orphan")
+
+

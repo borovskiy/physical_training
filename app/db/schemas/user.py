@@ -5,11 +5,11 @@ from pydantic import BaseModel, ConfigDict
 from db.models.user import PlanEnum
 
 
-class UserId(BaseModel):
+class UserIdSchema(BaseModel):
     id: int
 
 
-class UserCreatedAndUpdate(BaseModel):
+class UserCreatedAndUpdateSchema(BaseModel):
     created_at: datetime
     updated_at: datetime
 
@@ -32,11 +32,11 @@ class UserGetModelSchema(UserPostModelUpdateSchema):
     plan: PlanEnum
 
 
-class PasswordUser(BaseModel):
+class PasswordUserSchema(BaseModel):
     password_hash: str
 
 
-class SystemUser(BaseModel):
+class SystemUserSchema(BaseModel):
     email: str
     is_active: bool
     is_confirmed: bool
@@ -44,9 +44,9 @@ class SystemUser(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class UserAdminGetModelSchema(UserGetModelSchema, SystemUser, UserId,UserCreatedAndUpdate):
+class UserAdminGetModelSchema(UserGetModelSchema, SystemUserSchema, UserIdSchema, UserCreatedAndUpdateSchema):
     model_config = {"from_attributes": True}
 
 
-class UserAdminPutModelSchema(UserGetModelSchema, SystemUser):
+class UserAdminPutModelSchema(UserGetModelSchema, SystemUserSchema):
     model_config = {"from_attributes": True}

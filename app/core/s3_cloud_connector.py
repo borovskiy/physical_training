@@ -28,21 +28,22 @@ class S3CloudConnector:
                 print(f"Error: {e}")
                 return []
 
-    async def download_file(self, bucket, object_name, local_path):
+    async def download_file(self, bucket, key, object_name, local_path):
         async with self.session.client("s3", endpoint_url=self.endpoint) as s3:
             try:
-                await s3.download_file(bucket, object_name, local_path)
+                await s3.download_file(bucket, f"{key}/{object_name}", local_path)
                 return True
             except ClientError as e:
                 print(f"Download error: {e}")
                 return False
 
-    async def upload_upload_file(self, bucket, file: UploadFile) -> str | None:
-        ext = os.path.splitext(file.filename or "")[1]
-        key = f"exercises/{uuid4().hex}{ext}"
-        async with self.session.client("s3", endpoint_url=self.endpoint) as s3:
+    async def upload_upload_file(self, bucket, key: str, file: UploadFile, public) -> str | None:
+        async with self.session.client("s3", endpoint_url=self.endpoint) as client:
             try:
-                await s3.upload_fileobj(file.file, bucket, key)
+                extra_args = {"ContentType": file.content_type or "application/octet-stream"}
+                if public:
+                    extra_args["ACL"] = "public-read"
+                await client.upload_fileobj(file, bucket, key, ExtraArgs=extra_args)
                 return f"https://storage.yandexcloud.net/{bucket}/{key}"
             except ClientError as e:
                 print(f"Upload error: {e}")
@@ -61,6 +62,10 @@ class S3CloudConnector:
                 print(f"Error: {e}")
                 return None
 
-
-def get_s3_connector() -> S3CloudConnector:
-    return S3CloudConnector()
+    async def remove_file_url(self, bucket, key):
+        async with self.session.client("s3", endpoint_url=self.endpoint) as s3:
+            try:
+                await s3.delete_object(Bucket=bucket, Key=key)
+            except ClientError as e:
+                print(f"Error: {e}")
+                return None
