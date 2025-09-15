@@ -55,8 +55,8 @@ class ExerciseServices:
             return None
 
     async def remove_exercise(self, exercise_id: int, user: User):
-        get_exercise = await self.repo.get_by_id(user.id, exercise_id)
-        if get_exercise is None:
+        exercise = await self.repo.get_by_id(user.id, exercise_id)
+        if exercise is None:
             _forbidden("No exercise found")
-        result = await self.repo.remove_exercise_id(exercise_id)
+        result = await self.repo.remove_exercise_id(exercise)
         return result

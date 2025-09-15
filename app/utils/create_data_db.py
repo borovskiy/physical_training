@@ -4,14 +4,13 @@ from typing import List
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from core.config import settings
-from core.dependencies import get_db
 from db.models import User, Exercise, Workout, WorkoutExercise
 from faker import Faker
 
 from services.auth_service import hash_password
 
 
-async def create_db_data(count_user: int = 20, count_exercise_for_user: int = 40, count_workout_for_user: int = 5):
+async def create_db_data(count_user: int = 3, count_exercise_for_user: int = 40, count_workout_for_user: int = 5):
     fake = Faker()
     SessionLocal = async_sessionmaker(
         bind=create_async_engine(settings.DB_URL),

@@ -53,7 +53,6 @@ class WorkoutRepository(BaseRepo):
         total = (await self.session.execute(stmt_count_workouts)).scalar_one()
         return workouts, total
 
-    async def remove_workout_id(self, id_workout: int) -> Workout | None:
-        stmt = delete(self.model).where(self.model.id == id_workout)
-        result = await self.session.execute(stmt)
-        return result.scalars().first()
+    async def remove_workout_id(self, workout: Workout) -> Workout | None:
+        await self.session.delete(workout)
+        await self.session.commit()

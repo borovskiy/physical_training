@@ -6,6 +6,7 @@ from core.dependencies import user_services, require_user_attrs
 from db.models import User
 from db.schemas.user import UserGetModelSchema, UserPostModelUpdateSchema, UserAdminPutModelSchema, \
     UserAdminGetModelSchema
+from services.auth_service import _ok
 from services.user_versice import UserServices
 from utils.create_data_db import create_db_data
 
@@ -59,9 +60,9 @@ async def put_me_id(
 
 @router.delete("/{user_id}")
 async def me(
-        user_id,
+        user_id: int,
         user_serv: Annotated[UserServices, Depends(user_services)],
         current_user: User = Depends(require_user_attrs(is_admin=True)),
 ):
     result = await user_serv.remove_user(user_id)
-    return result
+    return _ok()

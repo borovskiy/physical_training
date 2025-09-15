@@ -135,8 +135,8 @@ def verify_token(raw_token: str) -> PayloadToken:
 def _forbidden(detail: str = "Forbidden"):
     return HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=detail)
 
-def _ok(detail: str = "Forbidden"):
-    return HTTPException(status_code=status.HTTP_200_OK_FORBIDDEN, detail=detail)
+def _ok(detail: str = "OK"):
+    return HTTPException(status_code=status.HTTP_200_OK, detail=detail)
 
 
 

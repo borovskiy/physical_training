@@ -83,7 +83,6 @@ class ExerciseRepository(BaseRepo):
         return cnt
 
 
-    async def remove_exercise_id(self, id_exercise: int) -> Exercise | None:
-        stmt = delete(self.model).where(self.model.id == id_exercise)
-        result = await self.session.execute(stmt)
-        return result.scalars().first()
+    async def remove_exercise_id(self, exercise: Exercise) -> Exercise | None:
+        await self.session.delete(exercise)
+        await self.session.commit()
