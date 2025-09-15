@@ -1,10 +1,9 @@
-from typing import Annotated, List
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, UploadFile
 from starlette import status
 
-from core.dependencies import exercise_services, get_s3_connector, require_user_attrs
-from core.s3_cloud_connector import S3CloudConnector
+from core.dependencies import exercise_services, require_user_attrs
 from db.models import User
 from db.schemas.exercise import CreateExerciseSchema, ExerciseSchema, ExercisePage, UpdateExerciseSchema
 from db.schemas.paginate import PaginationGet

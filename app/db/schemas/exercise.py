@@ -1,27 +1,22 @@
-from datetime import datetime
-from typing import Optional, Dict, Any, List, Sequence
+from typing import Optional, Dict, Any, Sequence
 
-from fastapi import Form, UploadFile, File
-from pydantic import BaseModel, ConfigDict
+from fastapi import Form
 
+from db.schemas.base import BaseModelSchema, BaseIdSchema, BaseCreatedAndUpdateSchema
 from db.schemas.paginate import PageMeta
 
 
-class ExerciseSchema(BaseModel):
-    id: int
+class ExerciseSchema(BaseModelSchema, BaseIdSchema, BaseCreatedAndUpdateSchema):
     owner_id: int
     title: str
     type: str
     description: str
     media_url: Optional[str] = None
     meta: Optional[Dict[str, Any]] = None  # <-- допускаем None
-    created_at: datetime
-    updated_at: datetime
-
-    model_config = ConfigDict(from_attributes=True)
 
 
-class UpdateExerciseSchema(BaseModel):
+
+class UpdateExerciseSchema(BaseModelSchema):
     title: str
     type: str
     description: str
@@ -43,6 +38,6 @@ class CreateExerciseSchema(UpdateExerciseSchema):
         )
 
 
-class ExercisePage(BaseModel):
+class ExercisePage(BaseModelSchema):
     exercise: Sequence[ExerciseSchema]
     meta: PageMeta

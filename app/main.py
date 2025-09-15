@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from sqlalchemy.orm import configure_mappers
 
-from app.api.v1 import auth, users, exercises
+from app.api.v1 import auth, users, exercises, workout
 import uvicorn
 from dotenv import load_dotenv
 
@@ -11,6 +11,7 @@ def create_app() -> FastAPI:
     app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
     app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
     app.include_router(exercises.router, prefix="/api/v1/exercise", tags=["exercises"])
+    app.include_router(workout.router, prefix="/api/v1/workout", tags=["workouts"])
 
     return app
 

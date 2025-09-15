@@ -10,7 +10,7 @@ from services.auth_service import get_bearer_token, verify_token, _unauthorized,
     _forbidden
 from services.exercise_service import ExerciseServices
 from services.user_versice import UserServices
-
+from services.workout_service import WorkoutServices
 
 SessionLocal = async_sessionmaker(
     bind=create_async_engine(settings.DB_URL),
@@ -28,6 +28,8 @@ def user_services(session: AsyncSession = Depends(get_db)) -> UserServices:
 def exercise_services(session: AsyncSession = Depends(get_db)) -> ExerciseServices:
     return ExerciseServices(session)
 
+def workout_services(session: AsyncSession = Depends(get_db)) -> WorkoutServices:
+    return WorkoutServices(session)
 
 def get_s3_connector() -> S3CloudConnector:
     return S3CloudConnector()

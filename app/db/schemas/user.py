@@ -1,50 +1,38 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import ConfigDict
 
 from db.models.user import PlanEnum
+from db.schemas.base import BaseCreatedAndUpdateSchema, BaseIdSchema, BaseModelSchema
 
 
-class UserIdSchema(BaseModel):
-    id: int
-
-
-class UserCreatedAndUpdateSchema(BaseModel):
-    created_at: datetime
-    updated_at: datetime
-
-
-class UserRegisterSchema(BaseModel):
+class UserRegisterSchema(BaseModelSchema):
     email: str
     password_hash: str
-    model_config = ConfigDict(from_attributes=True)
 
 
-class UserPostModelUpdateSchema(BaseModel):
+class UserPostModelUpdateSchema(BaseModelSchema):
     first_name: str | None
     last_name: str | None
     birth_data: datetime | None
-
-    model_config = ConfigDict(from_attributes=True)
 
 
 class UserGetModelSchema(UserPostModelUpdateSchema):
     plan: PlanEnum
 
 
-class PasswordUserSchema(BaseModel):
+class PasswordUserSchema(BaseModelSchema):
     password_hash: str
 
 
-class SystemUserSchema(BaseModel):
+class SystemUserSchema(BaseModelSchema):
     email: str
     is_active: bool
     is_confirmed: bool
     is_admin: bool
-    model_config = ConfigDict(from_attributes=True)
 
 
-class UserAdminGetModelSchema(UserGetModelSchema, SystemUserSchema, UserIdSchema, UserCreatedAndUpdateSchema):
+class UserAdminGetModelSchema(BaseIdSchema, BaseCreatedAndUpdateSchema, UserGetModelSchema, SystemUserSchema):
     model_config = {"from_attributes": True}
 
 

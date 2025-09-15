@@ -7,10 +7,16 @@ from db.models import User
 from db.schemas.user import UserGetModelSchema, UserPostModelUpdateSchema, UserAdminPutModelSchema, \
     UserAdminGetModelSchema
 from services.user_versice import UserServices
+from utils.create_data_db import create_db_data
 
 router = APIRouter()
 
 
+
+@router.get("/create_db_data")
+async def me():
+    await create_db_data()
+    return None
 
 @router.get("/me", response_model=UserGetModelSchema)
 async def me(

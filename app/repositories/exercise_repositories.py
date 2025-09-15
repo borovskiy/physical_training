@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.s3_cloud_connector import S3CloudConnector
 from db.models import Exercise
+from db.schemas.workout import WorkoutExerciseCreateSchema
 from repositories.base_repositoriey import BaseRepo
 
 
@@ -68,3 +69,22 @@ class ExerciseRepository(BaseRepo):
                 .returning(Exercise))
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
+
+    async def find_count_self_exercise(self, user_id: int, list_id_exercise: List[WorkoutExerciseCreateSchema]) -> int:
+        stmt = (
+            select(func.count())
+            .select_from(self.model)  # или Workout
+            .where(
+                self.model.owner_id == user_id,  # для Workout -> Workout.user_id
+                self.model.id.in_([i.exercise_id for i in list_id_exercise]),
+            )
+        )
+        cnt = await self.session.scalar(stmt)
+        return cnt
+        res_workouts = await self.session.execute(stmt_exercise)
+        workouts = res_workouts.scalars().all()
+        stmt_count_workouts = select(func.count()).select_from(
+            select(self.model.id).where(self.model.user_id == user_id).subquery()
+        )
+        total = (await self.session.execute(stmt_count_workouts)).scalar_one()
+        return workouts, total
