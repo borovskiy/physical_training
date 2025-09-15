@@ -78,3 +78,6 @@ class UserServices:
     async def find_user(self, user_id: int):
         return await self.repo.find_user_id(user_id)
 
+    async def remove_user(self, user_id: int):
+        user_del = await self.repo.remove_user_id(user_id)
+        return user_del

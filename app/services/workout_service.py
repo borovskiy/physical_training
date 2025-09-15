@@ -39,3 +39,10 @@ class WorkoutServices:
             workouts=workouts,
             meta=PageMeta(total=total, limit=limit, pages=pages),
         )
+
+    async def remove_workout(self, workout_id: int, user: User):
+        get_workout = await self.repo_workout.get_workout_with_user(user.id, workout_id)
+        if get_workout is None:
+            _forbidden("No workout found")
+        result = await self.repo_workout.remove_workout_id(workout_id)
+        return result

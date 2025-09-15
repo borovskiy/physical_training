@@ -47,11 +47,21 @@ async def get_user_for_admin(
 
 
 @router.put("/{user_id}", response_model=UserAdminGetModelSchema)
-async def me(
+async def put_me_id(
         user_id,
         data_user: UserAdminPutModelSchema,
         user_serv: Annotated[UserServices, Depends(user_services)],
         current_user: User = Depends(require_user_attrs(is_admin=True)),
 ):
     result = await user_serv.update_user_profile_admin(user_id, data_user)
+    return result
+
+
+@router.delete("/{user_id}")
+async def me(
+        user_id,
+        user_serv: Annotated[UserServices, Depends(user_services)],
+        current_user: User = Depends(require_user_attrs(is_admin=True)),
+):
+    result = await user_serv.remove_user(user_id)
     return result

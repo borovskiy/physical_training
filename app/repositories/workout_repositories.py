@@ -1,4 +1,4 @@
-from sqlalchemy import select, func
+from sqlalchemy import select, func, delete, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -22,11 +22,18 @@ class WorkoutRepository(BaseRepo):
 
     async def get_workout(self, workout_id: int) -> Workout:
         stmt = select(self.model).where(Workout.id == workout_id).options(
-            # 1) подгружаем элементы воркаута
             selectinload(Workout.items)
-            # 2) и для каждого элемента подгружаем упражнение
             .selectinload(WorkoutExercise.exercise)
         )
+        result = await self.session.execute(stmt)
+        return result.scalars().first()
+
+    async def get_workout_with_user(self, workout_id: int, user_id: int) -> Workout:
+        stmt = select(self.model).where(
+            and_(
+                Workout.id == workout_id,
+                Workout.user_id == user_id
+            ))
         result = await self.session.execute(stmt)
         return result.scalars().first()
 
@@ -46,7 +53,7 @@ class WorkoutRepository(BaseRepo):
         total = (await self.session.execute(stmt_count_workouts)).scalar_one()
         return workouts, total
 
-
-        stmt = select(self.model).where(Workout.user_id == user_id)
+    async def remove_workout_id(self, id_workout: int) -> Workout | None:
+        stmt = delete(self.model).where(self.model.id == id_workout)
         result = await self.session.execute(stmt)
         return result.scalars().first()

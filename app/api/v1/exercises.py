@@ -63,3 +63,13 @@ async def update_exercise_file(
 ):
     result = await exercise_serv.update_file_exercise(current_user, exercise_id, file)
     return result
+
+
+@router.delete("/{exercise_id}", response_model=ExerciseSchema, status_code=status.HTTP_200_OK)
+async def remove_exercises(
+        exercise_id: int,
+        exercise_serv: Annotated[ExerciseServices, Depends(exercise_services)],
+        current_user: User = Depends(require_user_attrs()),
+):
+    result = await exercise_serv.remove_exercise(exercise_id, current_user)
+    return result

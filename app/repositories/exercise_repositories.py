@@ -81,10 +81,9 @@ class ExerciseRepository(BaseRepo):
         )
         cnt = await self.session.scalar(stmt)
         return cnt
-        res_workouts = await self.session.execute(stmt_exercise)
-        workouts = res_workouts.scalars().all()
-        stmt_count_workouts = select(func.count()).select_from(
-            select(self.model.id).where(self.model.user_id == user_id).subquery()
-        )
-        total = (await self.session.execute(stmt_count_workouts)).scalar_one()
-        return workouts, total
+
+
+    async def remove_exercise_id(self, id_exercise: int) -> Exercise | None:
+        stmt = delete(self.model).where(self.model.id == id_exercise)
+        result = await self.session.execute(stmt)
+        return result.scalars().first()

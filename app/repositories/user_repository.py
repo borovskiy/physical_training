@@ -37,6 +37,11 @@ class UserRepository(BaseRepo):
         await self.session.commit()
         return result.rowcount > 0
 
+    async def remove_user_id(self, id_user: int) -> User | None:
+        stmt = delete(self.model).where(self.model.id == id_user)
+        result = await self.session.execute(stmt)
+        return result.scalars().first()
+
     async def get_by_id(self, user_id: int | str) -> User | None:
         stmt = select(self.model).where(self.model.id == int(user_id))
         res = await self.session.execute(stmt)

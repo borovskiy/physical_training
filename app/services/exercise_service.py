@@ -10,6 +10,7 @@ from core.s3_cloud_connector import S3CloudConnector
 from db.models import User, Exercise
 from db.schemas.exercise import CreateExerciseSchema, ExercisePage, PageMeta, UpdateExerciseSchema
 from repositories.exercise_repositories import ExerciseRepository
+from services.auth_service import _forbidden
 
 
 class ExerciseServices:
@@ -53,5 +54,9 @@ class ExerciseServices:
         else:
             return None
 
-    async def remove_exercise(self):
-        ...
+    async def remove_exercise(self, exercise_id: int, user: User):
+        get_exercise = await self.repo.get_by_id(user.id, exercise_id)
+        if get_exercise is None:
+            _forbidden("No exercise found")
+        result = await self.repo.remove_exercise_id(exercise_id)
+        return result

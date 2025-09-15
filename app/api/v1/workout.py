@@ -44,3 +44,13 @@ async def create_workout(
 ):
     result = await workout_serv.create_workout(workout_schema, exercises_schema, current_user)
     return result
+
+
+@router.delete("/{exercise_id}", response_model=WorkoutExerciseCreateSchema, status_code=status.HTTP_200_OK)
+async def remove_workout(
+        workout_id: int,
+        workout_serv: Annotated[WorkoutServices, Depends(workout_services)],
+        current_user: User = Depends(require_user_attrs()),
+):
+    result = await workout_serv.remove_workout(workout_id, current_user)
+    return result
