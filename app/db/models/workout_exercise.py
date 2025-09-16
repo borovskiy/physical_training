@@ -3,10 +3,10 @@ from typing import Optional
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import Text, ForeignKey
 
-from app.db.base import Base
+from app.db.base import BaseModel
 
 
-class WorkoutExercise(Base):
+class WorkoutExerciseModel(BaseModel):
     __tablename__ = "workout_exercises"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)                      # ID строки
@@ -16,7 +16,7 @@ class WorkoutExercise(Base):
     position: Mapped[int] = mapped_column(default=1)                                           # порядок в воркауте
     notes: Mapped[Optional[str]] = mapped_column(Text)                                         # комментарии
 
-    workout: Mapped["Workout"] = relationship(back_populates="items")                          # связь с воркаутом
-    exercise: Mapped["Exercise"] = relationship(back_populates="workout_items")                # связь с упражнением
+    workout: Mapped["WorkoutModel"] = relationship(back_populates="items")                          # связь с воркаутом
+    exercise: Mapped["ExerciseModel"] = relationship(back_populates="workout_items")                # связь с упражнением
 
 

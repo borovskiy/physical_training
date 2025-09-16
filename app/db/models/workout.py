@@ -4,30 +4,30 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, Text, DateTime, ForeignKey
 
-from app.db.base import Base
+from app.db.base import BaseModel
 
 
-class Workout(Base):
+class WorkoutModel(BaseModel):
     __tablename__ = "workouts"
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)  # ID тренировки
-    title: Mapped[str] = mapped_column(String(200), default="")  # название тренировки
-    description: Mapped[Optional[str]] = mapped_column(Text)  # описание/заметки
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    title: Mapped[str] = mapped_column(String(200), default="")
+    description: Mapped[Optional[str]] = mapped_column(Text)
 
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))  # кто создал
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))  # создано
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc)
-    )  # обновлено
-    user: Mapped["User"] = relationship(back_populates="workouts")  # связь с владельцем
+    )
+    user: Mapped["UserModel"] = relationship(back_populates="workouts")
 
-    items: Mapped[List["WorkoutExercise"]] = relationship(
+    items: Mapped[List["WorkoutExerciseModel"]] = relationship(
         back_populates="workout",
         cascade="all, delete-orphan",
-        order_by="WorkoutExercise.position",
-    )  # список упражнений (с деталями)
+        order_by="WorkoutExerciseModel.position",
+    )
 
-    exercises: Mapped[List["Exercise"]] = relationship(
+    exercises: Mapped[List["ExerciseModel"]] = relationship(
         secondary="workout_exercises", viewonly=True
-    )  # просто список упражнений (viewonly)
+    )

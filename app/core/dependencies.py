@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from core.config import settings
 from core.s3_cloud_connector import S3CloudConnector
-from db.models import User
+from db.models import UserModel
 from services.auth_service import get_bearer_token, verify_token, _unauthorized, check_active_and_confirmed_user, \
     _forbidden
 from services.exercise_service import ExerciseServices
@@ -43,7 +43,7 @@ def require_user_attrs(
     - затем проверяет переданные флаги (если указаны).
     """
 
-    async def dep(current_user: Annotated[User, Depends(get_current_user_from_token)]) -> User:
+    async def dep(current_user: Annotated[UserModel, Depends(get_current_user_from_token)]) -> UserModel:
         if is_admin:
             if bool(current_user.is_admin):
                 return current_user
@@ -58,7 +58,7 @@ def require_user_attrs(
 async def get_current_user_from_token(
         raw_token: str = Depends(get_bearer_token),
         user_serv = Depends(user_services),  # чтобы достать repo
-) -> User:
+) -> UserModel:
     payload = verify_token(raw_token)
     user = await user_serv.repo.get_by_id(payload.user_id)
     if not user:

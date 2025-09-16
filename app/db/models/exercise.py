@@ -5,10 +5,10 @@ from fastapi import UploadFile
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, Text, DateTime, ForeignKey, JSON
 
-from app.db.base import Base
+from app.db.base import BaseModel
 
 
-class Exercise(Base):
+class ExerciseModel(BaseModel):
     __tablename__ = "exercises"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)  # ID упражнения
@@ -30,8 +30,8 @@ class Exercise(Base):
     rest_sec: Mapped[Optional[int]] = mapped_column(default=None)  # пауза после (сек)
 
     # связи
-    owner: Mapped["User"] = relationship(back_populates="exercises")
-    workout_items: Mapped[List["WorkoutExercise"]] = relationship(back_populates="exercise",
+    owner: Mapped["UserModel"] = relationship(back_populates="exercises")
+    workout_items: Mapped[List["WorkoutExerciseModel"]] = relationship(back_populates="exercise",
                                                                   cascade="all, delete-orphan")
 
     def get_media_url_path(self, file: UploadFile) -> str:

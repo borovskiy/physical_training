@@ -16,11 +16,11 @@ if config.config_file_name:
     fileConfig(config.config_file_name)
 
 # --- импортируем настройки и модели ---
-from app.db.base import Base                # noqa: E402
+from app.db.base import BaseModel                # noqa: E402
 import app.db.models                        # noqa: F401,E402
 from app.core.config import settings
 
-target_metadata = Base.metadata
+target_metadata = BaseModel.metadata
 DB_URL = settings.DB_URL
 
 

@@ -9,7 +9,7 @@ from passlib.context import CryptContext
 
 from app.core.config import settings
 
-from db.models import User
+from db.models import UserModel
 from db.schemas.auth import PayloadToken
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -42,7 +42,7 @@ security_bearer = HTTPBearer(auto_error=False)
 
 
 
-def issue_email_verify_token(user: User) -> str:
+def issue_email_verify_token(user: UserModel) -> str:
     now = datetime.now(timezone.utc)
     payload = PayloadToken(
         token_limit_verify=int((now + timedelta(minutes=settings.VERIFY_TOKEN_TTL_MIN)).timestamp()),
@@ -53,17 +53,17 @@ def issue_email_verify_token(user: User) -> str:
     return jwt.encode(payload.model_dump(), settings.JWT_SECRET, algorithm=settings.JWT_ALG)
 
 
-def check_active_and_confirmed_user(user: User) -> bool | HTTPException:
+def check_active_and_confirmed_user(user: UserModel) -> bool | HTTPException:
     return active_user(user) and confirmed_user(user)
 
 
-def active_user(user: User) -> bool | HTTPException:
+def active_user(user: UserModel) -> bool | HTTPException:
     if not user.is_active:
         raise _unauthorized("User is not active")
     return True
 
 
-def confirmed_user(user: User) -> bool | HTTPException:
+def confirmed_user(user: UserModel) -> bool | HTTPException:
     if not user.is_confirmed:
         raise _unauthorized("User is not confirmed")
     return True

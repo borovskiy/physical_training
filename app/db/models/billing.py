@@ -3,10 +3,10 @@ from datetime import datetime
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String, Integer, DateTime, ForeignKey
 
-from app.db.base import Base
+from app.db.base import BaseModel
 
 
-class BillingTransaction(Base):
+class BillingTransactionModel(BaseModel):
     __tablename__ = "billing_transactions"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)               # ID транзакции

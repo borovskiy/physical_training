@@ -4,7 +4,7 @@ from typing import List
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from core.config import settings
-from db.models import User, Exercise, Workout, WorkoutExercise
+from db.models import UserModel, ExerciseModel, WorkoutModel, WorkoutExerciseModel
 from faker import Faker
 
 from services.auth_service import hash_password
@@ -21,7 +21,7 @@ async def create_db_data(count_user: int = 3, count_exercise_for_user: int = 40,
 
         list_users = []
         for user_number in range(0, count_user):
-            user = User(
+            user = UserModel(
                 email=fake.email(),
                 first_name=fake.first_name(),
                 last_name=fake.last_name(),
@@ -37,11 +37,11 @@ async def create_db_data(count_user: int = 3, count_exercise_for_user: int = 40,
             list_users.append(user)
 
         for user in list_users:
-            list_exercise: List[Exercise] = []
-            exercise = Exercise()
+            list_exercise: List[ExerciseModel] = []
+            exercise = ExerciseModel()
             for exercise_number in range(0, count_exercise_for_user):
                 if random.randint(0, 1) == 1:
-                    exercise = Exercise(
+                    exercise = ExerciseModel(
                         owner_id=user.id,
                         title=f"Title exercise {exercise_number}",
                         type="strength",
@@ -51,7 +51,7 @@ async def create_db_data(count_user: int = 3, count_exercise_for_user: int = 40,
                         rest_sec=random.randint(30, 180),
                     )
                 else:
-                    exercise = Exercise(
+                    exercise = ExerciseModel(
                         owner_id=user.id,
                         title=f"Title exercise {exercise_number}",
                         type="strength",
@@ -66,7 +66,7 @@ async def create_db_data(count_user: int = 3, count_exercise_for_user: int = 40,
                 await session.refresh(exercise)
                 list_exercise.append(exercise)
             for workout_number in range(0, count_workout_for_user):
-                workout = Workout(
+                workout = WorkoutModel(
                     title=f"Workout title user {user.email} {workout_number}",
                     description=f"Workout description {workout_number}",
                     user_id=user.id
@@ -77,7 +77,7 @@ async def create_db_data(count_user: int = 3, count_exercise_for_user: int = 40,
                 random_count_workout_exercise = random.randint(6, 8)
                 for k in range(0, random_count_workout_exercise):
                     exercise_random = random.choice(list_exercise),
-                    workout_exercise = WorkoutExercise(
+                    workout_exercise = WorkoutExerciseModel(
                         workout_id=workout.id,
                         exercise_id=exercise_random[0].id,
                         position=k

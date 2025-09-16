@@ -1,12 +1,12 @@
 import asyncio
 
-from fastapi import HTTPException, Depends
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from app.repositories.user_repository import UserRepository
 from core.config import settings
-from db.models import User
+from db.models import UserModel
 from db.schemas.user import UserRegisterSchema, UserPostModelUpdateSchema, UserAdminPutModelSchema
 from services.auth_service import issue_email_verify_token, hash_password, verify_email_for_confirm_email, \
     check_active_and_confirmed_user
@@ -60,7 +60,7 @@ class UserServices:
             return issue_email_verify_token(user_db)
         return None
 
-    async def update_user_profile(self, user: UserPostModelUpdateSchema, current_user: User):
+    async def update_user_profile(self, user: UserPostModelUpdateSchema, current_user: UserModel):
         update_user = await self.repo.update_profile_user(user.model_dump(), current_user.id)
         if update_user is not None:
             return update_user

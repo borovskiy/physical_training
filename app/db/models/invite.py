@@ -4,10 +4,10 @@ from datetime import datetime
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String, DateTime, ForeignKey, Integer
 
-from app.db.base import Base
+from app.db.base import BaseModel
 
 
-class Invite(Base):
+class InviteModel(BaseModel):
     __tablename__ = "invites"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)                 # ID инвайта

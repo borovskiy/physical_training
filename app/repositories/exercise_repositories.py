@@ -1,11 +1,9 @@
-from typing import List, Any, Coroutine, Sequence
+from typing import List, Any, Sequence
 
-from fastapi import HTTPException
-from sqlalchemy import update, select, delete, Row, RowMapping, func, and_
+from sqlalchemy import update, select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.s3_cloud_connector import S3CloudConnector
-from db.models import Exercise
+from db.models import ExerciseModel
 from db.schemas.workout import WorkoutExerciseCreateSchema
 from repositories.base_repositoriey import BaseRepo
 
@@ -13,9 +11,9 @@ from repositories.base_repositoriey import BaseRepo
 class ExerciseRepository(BaseRepo):
     def __init__(self, session: AsyncSession):
         self.session = session
-        self.model = Exercise
+        self.model = ExerciseModel
 
-    async def add_exercise(self, data: dict, user_id: int) -> Exercise:
+    async def add_exercise(self, data: dict, user_id: int) -> ExerciseModel:
         obj = self.model(**data)
         obj.owner_id = user_id
         self.session.add(obj)
@@ -24,12 +22,12 @@ class ExerciseRepository(BaseRepo):
         return obj
 
     async def update_link_exercise(self, exercise_id: int, exercise_link: str):
-        stmt = update(Exercise).where(Exercise.id == exercise_id).values(media_url=exercise_link)
+        stmt = update(self.model).where(self.model.id == exercise_id).values(media_url=exercise_link)
         await self.session.execute(stmt)
         await self.session.commit()
-        return await self.session.get(Exercise, exercise_id)
+        return await self.session.get(ExerciseModel, exercise_id)
 
-    async def get_all_exercise(self, user_id: int, limit: int, start: int) -> tuple[Sequence[Exercise], Any]:
+    async def get_all_exercise(self, user_id: int, limit: int, start: int) -> tuple[Sequence[ExerciseModel], Any]:
         stmt_exercise = (
             select(self.model)
             .where(self.model.owner_id == user_id)
@@ -45,13 +43,13 @@ class ExerciseRepository(BaseRepo):
         total = (await self.session.execute(stmt_count_exercise)).scalar_one()
         return exercise, total
 
-    async def get_by_id(self, user_id: int, exercise_id: int | str) -> Exercise | None:
+    async def get_by_id(self, user_id: int, exercise_id: int | str) -> ExerciseModel | None:
         stmt_exercise = (
             select(self.model)
             .where(
                 and_(
-                    Exercise.id == exercise_id,
-                    Exercise.owner_id == user_id
+                    self.model.id == exercise_id,
+                    self.model.owner_id == user_id
                 )
             )
 
@@ -59,14 +57,14 @@ class ExerciseRepository(BaseRepo):
         res = await self.session.execute(stmt_exercise)
         return res.scalars().first()
 
-    async def update_exercise(self, data: dict, user_id: int, exercise_id: int) -> Exercise:
-        stmt = (update(Exercise).where(
+    async def update_exercise(self, data: dict, user_id: int, exercise_id: int) -> ExerciseModel:
+        stmt = (update(self.model).where(
             and_(
-                Exercise.id == exercise_id,
-                Exercise.owner_id == user_id
+                self.model.id == exercise_id,
+                self.model.owner_id == user_id
             )
-        ).values(**data)
-                .returning(Exercise))
+        ).values(**data).returning(self.model)
+                )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -82,7 +80,6 @@ class ExerciseRepository(BaseRepo):
         cnt = await self.session.scalar(stmt)
         return cnt
 
-
-    async def remove_exercise_id(self, exercise: Exercise) -> Exercise | None:
+    async def remove_exercise_id(self, exercise: ExerciseModel) -> ExerciseModel | None:
         await self.session.delete(exercise)
         await self.session.commit()

@@ -3,7 +3,7 @@ from typing import List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.models import User, Workout
+from db.models import UserModel, WorkoutModel
 from db.schemas.paginate import PageMeta
 from db.schemas.workout import WorkoutCreateSchema, WorkoutExerciseCreateSchema, WorkoutPage
 from repositories.exercise_repositories import ExerciseRepository
@@ -19,7 +19,7 @@ class WorkoutServices:
         self.repo_exercise = ExerciseRepository(session)
 
     async def create_workout(self, workout_schema: WorkoutCreateSchema,
-                             exercises_schema: List[WorkoutExerciseCreateSchema], user: User) -> Workout:
+                             exercises_schema: List[WorkoutExerciseCreateSchema], user: UserModel) -> WorkoutModel:
         count_self_exercise = await self.repo_exercise.find_count_self_exercise(user.id, exercises_schema)
         if count_self_exercise == len(set([i.exercise_id for i in exercises_schema])):
             result_workout = await self.repo_workout.add_workout(workout_schema.model_dump(), user.id)
@@ -28,7 +28,7 @@ class WorkoutServices:
         else:
             raise _forbidden("You do not have the right to use gestures that do not belong to you.")
 
-    async def get_workout(self, workout_id: int) -> Workout:
+    async def get_workout(self, workout_id: int) -> WorkoutModel:
         result_workout = await self.repo_workout.get_workout(workout_id)
         return result_workout
 
@@ -40,7 +40,7 @@ class WorkoutServices:
             meta=PageMeta(total=total, limit=limit, pages=pages),
         )
 
-    async def remove_workout(self, workout_id: int, user: User):
+    async def remove_workout(self, workout_id: int, user: UserModel):
         workout = await self.repo_workout.get_workout_with_user(user.id, workout_id)
         if workout is None:
             _forbidden("No workout found")

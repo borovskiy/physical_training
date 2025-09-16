@@ -1,10 +1,10 @@
 from typing import Annotated, List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from starlette import status
 
 from core.dependencies import require_user_attrs, workout_services
-from db.models import User
+from db.models import UserModel
 from db.schemas.paginate import PaginationGet
 from db.schemas.workout import WorkoutCreateSchema, WorkoutExerciseCreateSchema, WorkoutFullSchema, \
     WorkoutPage
@@ -15,7 +15,7 @@ router = APIRouter()
 @router.get("/get_workouts/", response_model=WorkoutPage, status_code=status.HTTP_200_OK)
 async def get_workouts(
         workout_serv: Annotated[WorkoutServices, Depends(workout_services)],
-        current_user: User = Depends(require_user_attrs()),
+        current_user: UserModel = Depends(require_user_attrs()),
         pagination: PaginationGet = Depends(PaginationGet),
 
 ):
@@ -27,7 +27,7 @@ async def get_workouts(
 async def get_workout(
         workout_id: int,
         workout_serv: Annotated[WorkoutServices, Depends(workout_services)],
-        current_user: User = Depends(require_user_attrs()),
+        current_user: UserModel = Depends(require_user_attrs()),
 ):
     result = await workout_serv.get_workout(workout_id)
     return result
@@ -39,7 +39,7 @@ async def create_workout(
         workout_schema: WorkoutCreateSchema,
         exercises_schema: List[WorkoutExerciseCreateSchema],
 
-        current_user: User = Depends(require_user_attrs()),
+        current_user: UserModel = Depends(require_user_attrs()),
 
 ):
     result = await workout_serv.create_workout(workout_schema, exercises_schema, current_user)
@@ -50,7 +50,7 @@ async def create_workout(
 async def remove_workout(
         workout_id: int,
         workout_serv: Annotated[WorkoutServices, Depends(workout_services)],
-        current_user: User = Depends(require_user_attrs()),
+        current_user: UserModel = Depends(require_user_attrs()),
 ):
     result = await workout_serv.remove_workout(workout_id, current_user)
     return result
