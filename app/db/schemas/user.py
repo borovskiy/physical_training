@@ -17,6 +17,10 @@ class UserPostModelUpdateSchema(BaseModelSchema):
     birth_data: datetime | None
 
 
+class UserGetGroupSchema(UserPostModelUpdateSchema):
+    email: str
+
+
 class UserGetModelSchema(UserPostModelUpdateSchema):
     plan: PlanEnum
 

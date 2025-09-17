@@ -15,7 +15,7 @@ class ExerciseRepository(BaseRepo):
 
     async def add_exercise(self, data: dict, user_id: int) -> ExerciseModel:
         obj = self.model(**data)
-        obj.owner_id = user_id
+        obj.user_id = user_id
         self.session.add(obj)
         await self.session.commit()
         await self.session.refresh(obj)
@@ -30,7 +30,7 @@ class ExerciseRepository(BaseRepo):
     async def get_all_exercise(self, user_id: int, limit: int, start: int) -> tuple[Sequence[ExerciseModel], Any]:
         stmt_exercise = (
             select(self.model)
-            .where(self.model.owner_id == user_id)
+            .where(self.model.user_id == user_id)
             .order_by(self.model.created_at.asc())
             .offset(limit * start)
             .limit(limit)
@@ -38,7 +38,7 @@ class ExerciseRepository(BaseRepo):
         res_exercise = await self.session.execute(stmt_exercise)
         exercise = res_exercise.scalars().all()
         stmt_count_exercise = select(func.count()).select_from(
-            select(self.model.id).where(self.model.owner_id == user_id).subquery()
+            select(self.model.id).where(self.model.user_id == user_id).subquery()
         )
         total = (await self.session.execute(stmt_count_exercise)).scalar_one()
         return exercise, total
@@ -49,7 +49,7 @@ class ExerciseRepository(BaseRepo):
             .where(
                 and_(
                     self.model.id == exercise_id,
-                    self.model.owner_id == user_id
+                    self.model.user_id == user_id
                 )
             )
 
@@ -61,7 +61,7 @@ class ExerciseRepository(BaseRepo):
         stmt = (update(self.model).where(
             and_(
                 self.model.id == exercise_id,
-                self.model.owner_id == user_id
+                self.model.user_id == user_id
             )
         ).values(**data).returning(self.model)
                 )
@@ -73,7 +73,7 @@ class ExerciseRepository(BaseRepo):
             select(func.count())
             .select_from(self.model)  # или Workout
             .where(
-                self.model.owner_id == user_id,  # для Workout -> Workout.user_id
+                self.model.user_id == user_id,  # для Workout -> Workout.user_id
                 self.model.id.in_([i.exercise_id for i in list_id_exercise]),
             )
         )

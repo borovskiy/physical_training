@@ -21,8 +21,8 @@ class WorkoutRepository(BaseRepo):
 
     async def get_workout(self, workout_id: int) -> WorkoutModel:
         stmt = select(self.model).where(self.model.id == workout_id).options(
-            selectinload(self.model.items)
-            .selectinload(WorkoutExerciseModel.exercise)
+            selectinload(self.model.workout_exercise)
+            .selectinload(WorkoutExerciseModel.exercises)
         )
         result = await self.session.execute(stmt)
         return result.scalars().first()

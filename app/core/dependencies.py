@@ -9,11 +9,13 @@ from db.models import UserModel
 from services.auth_service import get_bearer_token, verify_token, _unauthorized, check_active_and_confirmed_user, \
     _forbidden
 from services.exercise_service import ExerciseServices
+from services.group_service import GroupServices
 from services.user_versice import UserServices
 from services.workout_service import WorkoutServices
+from utils.context import set_current_user
 
 SessionLocal = async_sessionmaker(
-    bind=create_async_engine(settings.DB_URL),
+    bind=create_async_engine(settings.DB_URL, echo=True, ),
     expire_on_commit=False,
 )
 
@@ -25,14 +27,22 @@ async def get_db():
 def user_services(session: AsyncSession = Depends(get_db)) -> UserServices:
     return UserServices(session)
 
+
 def exercise_services(session: AsyncSession = Depends(get_db)) -> ExerciseServices:
     return ExerciseServices(session)
+
 
 def workout_services(session: AsyncSession = Depends(get_db)) -> WorkoutServices:
     return WorkoutServices(session)
 
+
+def group_services(session: AsyncSession = Depends(get_db)) -> GroupServices:
+    return GroupServices(session)
+
+
 def get_s3_connector() -> S3CloudConnector:
     return S3CloudConnector()
+
 
 def require_user_attrs(
         is_admin: Optional[bool] = False,
@@ -57,7 +67,7 @@ def require_user_attrs(
 
 async def get_current_user_from_token(
         raw_token: str = Depends(get_bearer_token),
-        user_serv = Depends(user_services),  # чтобы достать repo
+        user_serv=Depends(user_services),  # чтобы достать repo
 ) -> UserModel:
     payload = verify_token(raw_token)
     user = await user_serv.repo.get_by_id(payload.user_id)
@@ -67,5 +77,5 @@ async def get_current_user_from_token(
     # если нужно ограничить только активных/подтверждённых:
     if not check_active_and_confirmed_user(user):
         raise _unauthorized("User is inactive or not confirmed")
-
+    set_current_user(user)
     return user

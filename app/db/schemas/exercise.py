@@ -7,7 +7,7 @@ from db.schemas.paginate import PageMeta
 
 
 class ExerciseSchema(BaseModelSchema, BaseIdSchema, BaseCreatedAndUpdateSchema):
-    owner_id: int
+    user_id: int
     title: str
     type: str
     description: str

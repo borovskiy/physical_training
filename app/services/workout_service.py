@@ -10,6 +10,7 @@ from repositories.exercise_repositories import ExerciseRepository
 from repositories.workout_exercise_repository import WorkoutExerciseRepository
 from repositories.workout_repositories import WorkoutRepository
 from services.auth_service import _forbidden
+from utils.context import get_current_user
 
 
 class WorkoutServices:
@@ -29,6 +30,8 @@ class WorkoutServices:
             raise _forbidden("You do not have the right to use gestures that do not belong to you.")
 
     async def get_workout(self, workout_id: int) -> WorkoutModel:
+        user = get_current_user()
+
         result_workout = await self.repo_workout.get_workout(workout_id)
         return result_workout
 

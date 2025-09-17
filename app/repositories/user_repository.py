@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from typing import List, Any, Coroutine, Sequence
+
 from fastapi import HTTPException
-from sqlalchemy import select, delete, update
+from sqlalchemy import select, delete, update, Row, RowMapping, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
@@ -30,6 +32,22 @@ class UserRepository(BaseRepo):
         stmt = select(self.model).where(self.model.id == id_user)
         result = await self.session.execute(stmt)
         return result.scalars().first()
+
+    async def find_users_by_id(self, list_users_id: List[int]) -> Sequence[UserModel]:
+        stmt = select(self.model).where(self.model.id.in_(list_users_id))
+        result = await self.session.execute(stmt)
+        return result.scalars().all()
+
+    async def find_count_by_id(self, list_users_id: List[int]) -> int:
+        if not list_users_id:
+            return 0
+        stmt = (
+            select(func.count())
+            .select_from(self.model)
+            .where(self.model.id.in_(list_users_id))
+        )
+        result = await self.session.execute(stmt)
+        return int(result.scalar_one())
 
     async def remove_user_all(self) -> bool:
         stmt = delete(self.model)

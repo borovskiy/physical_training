@@ -9,14 +9,13 @@ from app.db.base import BaseModel
 class WorkoutExerciseModel(BaseModel):
     __tablename__ = "workout_exercises"
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)                      # ID строки
-    workout_id: Mapped[int] = mapped_column(ForeignKey("workouts.id", ondelete="CASCADE"))     # к какой тренировке
-    exercise_id: Mapped[int] = mapped_column(ForeignKey("exercises.id", ondelete="RESTRICT"))  # какое упражнение
+    workout_id: Mapped[int] = mapped_column(ForeignKey("workouts.id", ondelete="CASCADE"))
+    exercise_id: Mapped[int] = mapped_column(ForeignKey("exercises.id", ondelete="RESTRICT"))
 
-    position: Mapped[int] = mapped_column(default=1)                                           # порядок в воркауте
-    notes: Mapped[Optional[str]] = mapped_column(Text)                                         # комментарии
+    position: Mapped[int] = mapped_column(default=1)
+    notes: Mapped[Optional[str]] = mapped_column(Text)
 
-    workout: Mapped["WorkoutModel"] = relationship(back_populates="items")                          # связь с воркаутом
-    exercise: Mapped["ExerciseModel"] = relationship(back_populates="workout_items")                # связь с упражнением
+    workouts: Mapped["WorkoutModel"] = relationship(back_populates="workout_exercise")
+    exercises: Mapped["ExerciseModel"] = relationship(back_populates="workouts_exercises")
 
 

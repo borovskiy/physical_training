@@ -14,7 +14,7 @@ class WorkoutCreateSchema(BaseModelSchema):
     description: str
 
 
-class ExerciseFullSchema(BaseIdSchema, BaseModelSchema):
+class ExerciseFullSchema(BaseIdSchema, BaseCreatedAndUpdateSchema, BaseModelSchema):
     title: str
     type: str
     media_url: str | None
@@ -27,8 +27,8 @@ class ExerciseFullSchema(BaseIdSchema, BaseModelSchema):
     time_work: int | None
 
 
-class WorkoutExerciseFullSchema(BaseIdSchema, BaseModelSchema):
-    exercise: ExerciseFullSchema
+class WorkoutExerciseFullSchema(BaseIdSchema,BaseCreatedAndUpdateSchema, BaseModelSchema):
+    exercises: ExerciseFullSchema
     position: int
 
 
@@ -37,9 +37,9 @@ class WorkoutGetOneSchema(BaseIdSchema, BaseCreatedAndUpdateSchema, WorkoutCreat
 
 
 class WorkoutFullSchema(WorkoutGetOneSchema):
-    items: List[WorkoutExerciseFullSchema]
+    workout_exercise: List[WorkoutExerciseFullSchema]
 
 
 class WorkoutPage(BaseModelSchema):
-    workouts: Sequence[WorkoutCreateSchema]
+    workouts: Sequence[WorkoutGetOneSchema]
     meta: PageMeta

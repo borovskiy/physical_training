@@ -10,20 +10,20 @@ from app.db.base import BaseModel
 class GroupModel(BaseModel):
     __tablename__ = "groups"
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)                    # ID группы
-    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))        # создатель группы
-    name: Mapped[str] = mapped_column(String(200))                                           # название группы
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)          # создана
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    name: Mapped[str] = mapped_column(String(200))
 
-    owner: Mapped["UserModel"] = relationship(back_populates="groups")                            # ссылка на владельца
+    user: Mapped["UserModel"] = relationship(back_populates="groups")
     members: Mapped[List["GroupMemberModel"]] = relationship(back_populates="group", cascade="all, delete-orphan")
 
 
 class GroupMemberModel(BaseModel):
     __tablename__ = "group_members"
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)                    # ID строки
-    group_id: Mapped[int] = mapped_column(ForeignKey("groups.id", ondelete="CASCADE"))       # группа
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))         # участник
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    group_id: Mapped[int] = mapped_column(ForeignKey("groups.id", ondelete="CASCADE"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
 
-    group: Mapped["GroupModel"] = relationship(back_populates="members")                          # связь на группу
+    group: Mapped["GroupModel"] = relationship(back_populates="members")
+    user: Mapped["UserModel"] = relationship(back_populates="members")

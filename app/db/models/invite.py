@@ -10,7 +10,6 @@ from app.db.base import BaseModel
 class InviteModel(BaseModel):
     __tablename__ = "invites"
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)                 # ID инвайта
     email: Mapped[str] = mapped_column(String(255))                                       # кого приглашаем
     token: Mapped[str] = mapped_column(String(255), unique=True)                          # токен (JWT/UUID)
     invited_by: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))   # кто пригласил

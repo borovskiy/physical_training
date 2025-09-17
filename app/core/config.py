@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     CLOUD_ACCESS_KEY: str
     CLOUD_SECRET_KEY: str
     CLOUD_REGION: str
+    MAX_COUNT_MEMBERS_GROUP:int = 10
 
     class Config:
         env_file = "../test.env"

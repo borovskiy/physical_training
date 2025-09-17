@@ -42,7 +42,7 @@ async def create_db_data(count_user: int = 3, count_exercise_for_user: int = 40,
             for exercise_number in range(0, count_exercise_for_user):
                 if random.randint(0, 1) == 1:
                     exercise = ExerciseModel(
-                        owner_id=user.id,
+                        user_id=user.id,
                         title=f"Title exercise {exercise_number}",
                         type="strength",
                         description=f"Description exercise {exercise_number}",
@@ -52,7 +52,7 @@ async def create_db_data(count_user: int = 3, count_exercise_for_user: int = 40,
                     )
                 else:
                     exercise = ExerciseModel(
-                        owner_id=user.id,
+                        user_id=user.id,
                         title=f"Title exercise {exercise_number}",
                         type="strength",
                         description=f"Description exercise {exercise_number}",

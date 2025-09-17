@@ -12,7 +12,7 @@ from services.workout_service import WorkoutServices
 
 router = APIRouter()
 
-@router.get("/get_workouts/", response_model=WorkoutPage, status_code=status.HTTP_200_OK)
+@router.get("/get_workouts", response_model=WorkoutPage, status_code=status.HTTP_200_OK)
 async def get_workouts(
         workout_serv: Annotated[WorkoutServices, Depends(workout_services)],
         current_user: UserModel = Depends(require_user_attrs()),
@@ -23,7 +23,7 @@ async def get_workouts(
     return result
 
 
-@router.get("/get_workout/{workout_id}", response_model=WorkoutFullSchema, status_code=status.HTTP_200_OK)
+@router.get("/{workout_id}", response_model=WorkoutFullSchema, status_code=status.HTTP_200_OK)
 async def get_workout(
         workout_id: int,
         workout_serv: Annotated[WorkoutServices, Depends(workout_services)],
@@ -38,7 +38,6 @@ async def create_workout(
         workout_serv: Annotated[WorkoutServices, Depends(workout_services)],
         workout_schema: WorkoutCreateSchema,
         exercises_schema: List[WorkoutExerciseCreateSchema],
-
         current_user: UserModel = Depends(require_user_attrs()),
 
 ):
@@ -46,7 +45,7 @@ async def create_workout(
     return result
 
 
-@router.delete("/{exercise_id}", response_model=WorkoutExerciseCreateSchema, status_code=status.HTTP_200_OK)
+@router.delete("/{workout_id}", response_model=WorkoutExerciseCreateSchema, status_code=status.HTTP_200_OK)
 async def remove_workout(
         workout_id: int,
         workout_serv: Annotated[WorkoutServices, Depends(workout_services)],
