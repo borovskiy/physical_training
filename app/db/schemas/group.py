@@ -5,7 +5,7 @@ from db.schemas.paginate import PageMeta
 from db.schemas.user import UserGetGroupSchema
 
 
-class GroupMembersCreateSchema(BaseModelSchema):
+class GroupMembersAddSchema(BaseModelSchema):
     user_id: int
 
 
@@ -26,9 +26,8 @@ class GroupFullSchema(GroupGetSchema):
     members: List[GroupMembersGetSchema]
 
 
-class GroupMembersCreateSchema(BaseModelSchema, BaseIdSchema, BaseCreatedAndUpdateSchema):
-    user_id: int
-
+class GroupMembersCreateSchema(GroupMembersAddSchema, BaseIdSchema, BaseCreatedAndUpdateSchema):
+    ...
 
 class GroupPage(BaseModelSchema):
     groups: Sequence[GroupGetSchema]

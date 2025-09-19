@@ -20,3 +20,4 @@ class WorkoutModel(BaseModel):
         order_by="WorkoutExerciseModel.position",
     )
     exercises: Mapped[List["ExerciseModel"]] = relationship(secondary="workout_exercises", viewonly=True)
+    group_members: Mapped[List["GroupMemberModel"]] = relationship(back_populates="workout", cascade="all, delete-orphan")

@@ -1,13 +1,12 @@
+from enum import nonmember
 from typing import List, Sequence, Any
 
-from sqlalchemy import select, func, and_, delete
+from sqlalchemy import select, func, and_, delete, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, joinedload
 
-from db.models import WorkoutModel, WorkoutExerciseModel, GroupModel, GroupMemberModel
-from db.schemas.group import GroupMembersCreateSchema
+from db.models import GroupModel, GroupMemberModel
 from repositories.base_repositoriey import BaseRepo
-from repositories.user_repository import UserRepository
 
 
 class GroupRepository(BaseRepo):
@@ -45,25 +44,20 @@ class GroupRepository(BaseRepo):
     async def add_members_group(self, members_schema: List[int], group_id: int) -> List[GroupMemberModel]:
         list_members = []
         for member_id in members_schema:
-            members_obj = GroupMemberModel(user_id=member_id,
-                                           group_id=group_id)
+            members_obj = GroupMemberModel(user_id=member_id, group_id=group_id)
             self.session.add(members_obj)
             list_members.append(members_obj)
-        await self.session.flush()
         await self.session.commit()
         return list_members
 
     async def get_group_by_id(self, id_group: int, user_id: int) -> GroupModel:
-        stmt = (select(self.model_group)
-        .options(
-            joinedload(self.model_group.members).joinedload(self.model_member_group.user),
-            joinedload(self.model_group.user)
+        stmt = (
+            select(self.model_group).where(
+                and_(
+                    self.model_group.id == id_group,
+                    self.model_group.user_id == user_id
+                )).options(joinedload(self.model_group.members))
         )
-        .where(
-            and_(
-                self.model_group.id == id_group,
-                self.model_group.user_id == user_id
-            )))
         result = await self.session.execute(stmt)
         return result.scalars().first()
 
@@ -139,3 +133,22 @@ class GroupRepository(BaseRepo):
         )
         await self.session.execute(stmt)
         await self.session.commit()
+
+    async def add_workout_in_group(self, id_group: int, id_workout: int) -> GroupMemberModel:
+        stmt = update(self.model_member_group).where(self.model_member_group.group_id == id_group).values(workout_id=id_workout)
+        await self.session.execute(stmt)
+        obj = await self.session.flush()
+        result = await self.session.commit()
+        return result
+
+
+    async def remove_workout_from_group(self, id_group: int) -> None:
+        stmt = (
+            update(self.model_member_group)
+            .where(
+                self.model_member_group.group_id == id_group,
+            ).values(workout_id=None)
+        )
+        await self.session.execute(stmt)
+        await self.session.commit()
+        return None

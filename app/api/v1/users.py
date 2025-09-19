@@ -8,6 +8,7 @@ from db.schemas.user import UserGetModelSchema, UserPostModelUpdateSchema, UserA
     UserAdminGetModelSchema
 from services.auth_service import _ok
 from services.user_versice import UserServices
+from utils.context import get_current_user
 from utils.create_data_db import create_db_data
 
 router = APIRouter()
@@ -19,50 +20,46 @@ async def me():
     await create_db_data()
     return None
 
-@router.get("/me", response_model=UserGetModelSchema)
+@router.get("/me", response_model=UserGetModelSchema, dependencies=[Depends(require_user_attrs())])
 async def me(
         user_serv: Annotated[UserServices, Depends(user_services)],
-        current_user: UserModel = Depends(require_user_attrs()),
 ):
+    current_user = get_current_user()
     return current_user
 
 
-@router.put("/me", response_model=UserGetModelSchema)
+@router.put("/me", response_model=UserGetModelSchema, dependencies=[Depends(require_user_attrs())])
 async def me(
         data_user: UserPostModelUpdateSchema,
         user_serv: Annotated[UserServices, Depends(user_services)],
-        current_user: UserModel = Depends(require_user_attrs()),
 ):
-    result = await user_serv.update_user_profile(data_user, current_user)
+    result = await user_serv.update_user_profile(data_user)
     return result
 
 
-@router.get("/{user_id}", response_model=UserAdminGetModelSchema)
+@router.get("/{user_id}", response_model=UserAdminGetModelSchema, dependencies=[Depends(require_user_attrs())])
 async def get_user_for_admin(
         user_id,
         user_serv: Annotated[UserServices, Depends(user_services)],
-        current_user: UserModel = Depends(require_user_attrs(is_admin=True)),
 ):
     result = await user_serv.find_user(user_id)
     return result
 
 
-@router.put("/{user_id}", response_model=UserAdminGetModelSchema)
+@router.put("/{user_id}", response_model=UserAdminGetModelSchema, dependencies=[Depends(require_user_attrs())])
 async def put_me_id(
         user_id,
         data_user: UserAdminPutModelSchema,
         user_serv: Annotated[UserServices, Depends(user_services)],
-        current_user: UserModel = Depends(require_user_attrs(is_admin=True)),
 ):
     result = await user_serv.update_user_profile_admin(user_id, data_user)
     return result
 
 
-@router.delete("/{user_id}")
+@router.delete("/{user_id}", dependencies=[Depends(require_user_attrs())])
 async def me(
         user_id: int,
         user_serv: Annotated[UserServices, Depends(user_services)],
-        current_user: UserModel = Depends(require_user_attrs(is_admin=True)),
 ):
     result = await user_serv.remove_user(user_id)
     return _ok()

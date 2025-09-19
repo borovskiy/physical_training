@@ -20,31 +20,35 @@ class WorkoutServices:
         self.repo_exercise = ExerciseRepository(session)
 
     async def create_workout(self, workout_schema: WorkoutCreateSchema,
-                             exercises_schema: List[WorkoutExerciseCreateSchema], user: UserModel) -> WorkoutModel:
-        count_self_exercise = await self.repo_exercise.find_count_self_exercise(user.id, exercises_schema)
+                             exercises_schema: List[WorkoutExerciseCreateSchema]) -> WorkoutModel:
+        current_user = get_current_user()
+        count_self_exercise = await self.repo_exercise.find_count_self_exercise(current_user.id, exercises_schema)
         if count_self_exercise == len(set([i.exercise_id for i in exercises_schema])):
-            result_workout = await self.repo_workout.add_workout(workout_schema.model_dump(), user.id)
-            await self.repo_workout_exercise.add_workout_exercise(exercises_schema, result_workout.id, user.id)
+            result_workout = await self.repo_workout.add_workout(workout_schema.model_dump(), current_user.id)
+            await self.repo_workout_exercise.add_workout_exercise(exercises_schema, result_workout.id, current_user.id)
             return await self.get_workout(result_workout.id)
         else:
             raise _forbidden("You do not have the right to use gestures that do not belong to you.")
 
     async def get_workout(self, workout_id: int) -> WorkoutModel:
-        user = get_current_user()
+        current_user = get_current_user()
+        workout = await self.repo_workout.get_workout_with_user(workout_id, current_user.id)
+        if workout is None:
+            _forbidden("No workout found")
+        return workout
 
-        result_workout = await self.repo_workout.get_workout(workout_id)
-        return result_workout
-
-    async def get_workouts(self, user_id: int, limit: int, start: int):
-        workouts, total = await self.repo_workout.get_all_workouts(user_id, limit, start)
+    async def get_workouts(self, limit: int, start: int):
+        current_user = get_current_user()
+        workouts, total = await self.repo_workout.get_all_workouts(current_user.id, limit, start)
         pages = ceil(total / limit) - 1 if limit else 1
         return WorkoutPage(
             workouts=workouts,
             meta=PageMeta(total=total, limit=limit, pages=pages),
         )
 
-    async def remove_workout(self, workout_id: int, user: UserModel):
-        workout = await self.repo_workout.get_workout_with_user(user.id, workout_id)
+    async def remove_workout(self, workout_id: int):
+        current_user = get_current_user()
+        workout = await self.repo_workout.get_workout_with_user(current_user.id, workout_id)
         if workout is None:
             _forbidden("No workout found")
         result = await self.repo_workout.remove_workout_id(workout)

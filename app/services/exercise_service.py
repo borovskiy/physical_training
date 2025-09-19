@@ -8,6 +8,7 @@ from db.models import UserModel, ExerciseModel
 from db.schemas.exercise import CreateExerciseSchema, ExercisePage, PageMeta, UpdateExerciseSchema
 from repositories.exercise_repositories import ExerciseRepository
 from services.auth_service import _forbidden
+from utils.context import get_current_user
 
 
 class ExerciseServices:
@@ -15,7 +16,8 @@ class ExerciseServices:
         self.repo = ExerciseRepository(session)
         self.s3 = S3CloudConnector()
 
-    async def get_exercises(self, current_user: UserModel, limit: int, start: int) -> ExercisePage:
+    async def get_exercises(self, limit: int, start: int) -> ExercisePage:
+        current_user = get_current_user()
         exercise, total = await self.repo.get_all_exercise(current_user.id, limit, start)
         pages = ceil(total / limit) if limit else 1
         return ExercisePage(
@@ -23,11 +25,13 @@ class ExerciseServices:
             meta=PageMeta(total=total, limit=limit, pages=pages),
         )
 
-    async def get_exercise(self, current_user: UserModel, exercise_id: int) -> ExerciseModel:
+    async def get_exercise(self, exercise_id: int) -> ExerciseModel:
+        current_user = get_current_user()
         exercise = await self.repo.get_by_id(current_user.id, exercise_id)
         return exercise
 
-    async def add_exercise(self, current_user: UserModel, payload: CreateExerciseSchema, file: UploadFile) -> ExerciseModel:
+    async def add_exercise(self, payload: CreateExerciseSchema, file: UploadFile) -> ExerciseModel:
+        current_user = get_current_user()
         new_exercise = await self.repo.add_exercise(payload.model_dump(), current_user.id)
         name_key_file = f"{current_user.email}/exercise_file/{new_exercise.id}/{file.filename}"
         link_exercise = await self.s3.upload_upload_file(self.s3.bucket, name_key_file, file, True)
@@ -38,7 +42,8 @@ class ExerciseServices:
         result = await self.repo.update_exercise(schema.model_dump(), current_user.id, exercise_id)
         return result
 
-    async def update_file_exercise(self, current_user: UserModel, exercise_id: int, file: UploadFile) -> ExerciseModel | None:
+    async def update_file_exercise(self, exercise_id: int, file: UploadFile) -> ExerciseModel | None:
+        current_user = get_current_user()
         exercise = await self.repo.get_by_id(current_user.id, exercise_id)
         if exercise is not None:
             link_for_remove = exercise.get_key_media_url_path_old()
@@ -51,8 +56,9 @@ class ExerciseServices:
         else:
             return None
 
-    async def remove_exercise(self, exercise_id: int, user: UserModel):
-        exercise = await self.repo.get_by_id(user.id, exercise_id)
+    async def remove_exercise(self, exercise_id: int):
+        current_user = get_current_user()
+        exercise = await self.repo.get_by_id(current_user.id, exercise_id)
         if exercise is None:
             _forbidden("No exercise found")
         result = await self.repo.remove_exercise_id(exercise)

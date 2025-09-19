@@ -10,6 +10,7 @@ from db.models import UserModel
 from db.schemas.user import UserRegisterSchema, UserPostModelUpdateSchema, UserAdminPutModelSchema
 from services.auth_service import issue_email_verify_token, hash_password, verify_email_for_confirm_email, \
     check_active_and_confirmed_user
+from utils.context import get_current_user
 from utils.email import send_email
 
 
@@ -60,7 +61,8 @@ class UserServices:
             return issue_email_verify_token(user_db)
         return None
 
-    async def update_user_profile(self, user: UserPostModelUpdateSchema, current_user: UserModel):
+    async def update_user_profile(self, user: UserPostModelUpdateSchema):
+        current_user = get_current_user()
         update_user = await self.repo.update_profile_user(user.model_dump(), current_user.id)
         if update_user is not None:
             return update_user

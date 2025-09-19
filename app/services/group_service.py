@@ -4,11 +4,12 @@ from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.models import UserModel, GroupModel
-from db.schemas.group import GroupCreateSchema, GroupMembersCreateSchema, GroupPage
+from db.schemas.group import GroupCreateSchema, GroupMembersCreateSchema, GroupPage, GroupMembersAddSchema
 from db.schemas.paginate import PageMeta
 
 from repositories.group_repositories import GroupRepository
 from repositories.user_repository import UserRepository
+from repositories.workout_repositories import WorkoutRepository
 from services.auth_service import _forbidden
 from utils.context import get_current_user
 from core.config import settings
@@ -16,6 +17,7 @@ from core.config import settings
 
 class GroupServices:
     def __init__(self, session: AsyncSession):
+        self.workout_repo = WorkoutRepository(session)
         self.repo = GroupRepository(session)
         self.user_repo = UserRepository(session)
 
@@ -39,7 +41,7 @@ class GroupServices:
         await self.repo.delete_group(group_id, current_user.id)
         return group
 
-    async def add_members_in_group(self, id_group: int, members_schema: List[GroupMembersCreateSchema]):
+    async def add_members_in_group(self, id_group: int, members_schema: List[GroupMembersAddSchema]):
         current_user = get_current_user()
         list_members_id = {member.user_id for member in members_schema}
         group = await self.repo.get_group_by_id(id_group, current_user.id)
@@ -77,4 +79,28 @@ class GroupServices:
         group = await self.repo.get_group_by_id(group_id, current_user.id)
         if group is None:
             raise _forbidden("Not found group")
+        if member_id not in [member.user_id for member in group.members]:
+            raise _forbidden("Not found members")
         return await self.repo.remove_member_group_id(member_id, group_id)
+
+    async def delete_workout_from_group(self, workout_id: int, group_id: int):
+        current_user = get_current_user()
+        group = await self.repo.get_group_by_id(group_id, current_user.id)
+        if group is None:
+            raise _forbidden("Not found group")
+        if workout_id not in [member.workout_id for member in group.members]:
+            raise _forbidden("Not found members")
+        return await self.repo.remove_workout_from_group(group_id)
+
+    async def add_workout_in_group(self, id_group: int, id_workout: int):
+        current_user = get_current_user()
+        workout = await self.workout_repo.get_workout_with_user(id_workout, current_user.id)
+        if workout is None:
+            raise _forbidden("Not found workout for you")
+        list_members_id = {workout.workout_id for workout in workout.group_members}
+        if id_workout in list_members_id:
+            raise _forbidden("Workout exist in group")
+        group = await self.repo.get_group_by_id(id_group, current_user.id)
+        if group is None:
+            raise _forbidden("Not found group for you")
+        return await self.repo.add_workout_in_group(id_group, id_workout)

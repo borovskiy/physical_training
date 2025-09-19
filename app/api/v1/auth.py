@@ -10,17 +10,6 @@ from services.user_versice import UserServices
 router = APIRouter()
 
 
-
-
-
-# @router.get("/create_table")
-# async def setup_database():
-#     async with engine.begin() as conn:
-#         # Внимание: это удалит все таблицы!
-#         await conn.run_sync(Base.metadata.create_all)
-#     return {"status": "ok"}
-
-
 @router.post("/signup", response_model=UserRegisterSchema)
 async def signup(sign_up_user: UserRegisterSchema,
                  user_serv: Annotated[UserServices, Depends(user_services)],
