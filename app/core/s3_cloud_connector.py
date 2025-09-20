@@ -1,6 +1,3 @@
-import os
-from uuid import uuid4
-
 import aioboto3
 from botocore.exceptions import ClientError
 from fastapi import UploadFile
@@ -65,7 +62,7 @@ class S3CloudConnector:
     async def remove_file_url(self, bucket, key):
         async with self.session.client("s3", endpoint_url=self.endpoint) as s3:
             try:
-                await s3.delete_object(Bucket=bucket, Key=key)
+                return await s3.delete_object(Bucket=bucket, Key=key)
             except ClientError as e:
                 print(f"Error: {e}")
                 return None

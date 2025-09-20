@@ -4,7 +4,7 @@ from sqlalchemy import update, select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.models import ExerciseModel
-from db.schemas.workout import WorkoutExerciseCreateSchema
+from db.schemas.workout_schema import WorkoutExerciseCreateSchema
 from repositories.base_repositoriey import BaseRepo
 
 
@@ -27,7 +27,7 @@ class ExerciseRepository(BaseRepo):
         await self.session.commit()
         return await self.session.get(ExerciseModel, exercise_id)
 
-    async def get_all_exercise(self, user_id: int, limit: int, start: int) -> tuple[Sequence[ExerciseModel], Any]:
+    async def get_all_exercise_user(self, user_id: int, limit: int, start: int) -> tuple[Sequence[ExerciseModel], Any]:
         stmt_exercise = (
             select(self.model)
             .where(self.model.user_id == user_id)
@@ -66,6 +66,7 @@ class ExerciseRepository(BaseRepo):
         ).values(**data).returning(self.model)
                 )
         result = await self.session.execute(stmt)
+        await self.session.commit()
         return result.scalar_one_or_none()
 
     async def find_count_self_exercise(self, user_id: int, list_id_exercise: List[WorkoutExerciseCreateSchema]) -> int:

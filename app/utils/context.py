@@ -12,6 +12,5 @@ def set_current_user(user: UserModel) -> None:
 def get_current_user() -> UserModel:
     user = _current_user.get()
     if user is None:
-        # Можно вернуть None, но удобнее явно падать, чтобы не скрывать ошибки
         raise RuntimeError("No current user in context")
     return user

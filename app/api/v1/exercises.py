@@ -4,10 +4,11 @@ from fastapi import APIRouter, Depends, File, UploadFile
 from starlette import status
 
 from core.dependencies import exercise_services, require_user_attrs
-from db.schemas.exercise import CreateExerciseSchema, ExerciseSchema, ExercisePage, UpdateExerciseSchema
-from db.schemas.paginate import PaginationGet
+from db.schemas.exercise_schema import CreateExerciseSchema, ExerciseSchema, ExercisePage, UpdateExerciseSchema
+from db.schemas.paginate_schema import PaginationGet
 from services.exercise_service import ExerciseServices
 
+# /api/v1/exercise
 router = APIRouter()
 
 
@@ -15,21 +16,19 @@ router = APIRouter()
              dependencies=[Depends(require_user_attrs())])
 async def create_exercise(
         exercise_serv: Annotated[ExerciseServices, Depends(exercise_services)],
-        payload: CreateExerciseSchema = Depends(CreateExerciseSchema.as_form),
+        exercise_schema: CreateExerciseSchema = Depends(CreateExerciseSchema.as_form),
         file: UploadFile = File(),
 ):
-    result = await exercise_serv.add_exercise(payload, file)
-    return result
+    return await exercise_serv.add_exercise(exercise_schema, file)
 
 
 @router.get("/get_exercises", response_model=ExercisePage, status_code=status.HTTP_200_OK,
             dependencies=[Depends(require_user_attrs())])
-async def create_exercises(
+async def get_exercises(
         exercise_serv: Annotated[ExerciseServices, Depends(exercise_services)],
         pagination: PaginationGet = Depends(PaginationGet),
 ):
-    result = await exercise_serv.get_exercises(pagination.limit, pagination.start)
-    return result
+    return await exercise_serv.get_exercises(pagination.limit, pagination.start)
 
 
 @router.get("/get_exercise/{exercise_id}", response_model=ExerciseSchema, status_code=status.HTTP_200_OK,
@@ -38,9 +37,7 @@ async def create_exercise(
         exercise_id: int,
         exercise_serv: Annotated[ExerciseServices, Depends(exercise_services)],
 ):
-    result = await exercise_serv.get_exercise(exercise_id)
-    return result
-
+    return await exercise_serv.get_exercise(exercise_id)
 
 @router.put("/update_exercise_data/{exercise_id}", response_model=ExerciseSchema, status_code=status.HTTP_200_OK,
             dependencies=[Depends(require_user_attrs())])

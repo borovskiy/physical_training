@@ -1,7 +1,7 @@
 from enum import nonmember
 from typing import List, Sequence, Any
 
-from sqlalchemy import select, func, and_, delete, update
+from sqlalchemy import select, func, and_, delete, update, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, joinedload
 
@@ -23,11 +23,12 @@ class GroupRepository(BaseRepo):
         await self.session.refresh(obj)
         return obj
 
-    async def rename_group(self, group_model: GroupModel) -> GroupModel:
-        self.session.add(group_model)
+    async def rename_group(self, group_name: str, group_id: int):
+        stmt = update(self.model_group).where(self.model_group.id == group_id).values(
+            name=group_name)
+
+        await self.session.execute(stmt)
         await self.session.commit()
-        await self.session.refresh(group_model)
-        return group_model
 
     async def delete_group(self, group_id: int, user_id: int) -> None:
         stmt = (
@@ -52,30 +53,42 @@ class GroupRepository(BaseRepo):
 
     async def get_group_by_id(self, id_group: int, user_id: int) -> GroupModel:
         stmt = (
-            select(self.model_group).where(
+            select(self.model_group)
+            .where(
                 and_(
                     self.model_group.id == id_group,
                     self.model_group.user_id == user_id
-                )).options(joinedload(self.model_group.members))
+                ))
         )
-        result = await self.session.execute(stmt)
-        return result.scalars().first()
+        return await self.session.scalar(stmt)
+
+    async def get_group_by_id_with_full_relation(self, id_group: int, user_id: int) -> GroupModel:
+        stmt = (
+            select(self.model_group).options(joinedload(self.model_group.members)).options(joinedload(self.model_group.workout))
+            .where(
+                and_(
+                    self.model_group.id == id_group,
+                    self.model_group.user_id == user_id
+                ))
+        )
+        return await self.session.scalar(stmt)
 
     async def get_group_user(self, user_id: int, limit: int, start: int) -> tuple[Sequence[GroupModel], Any]:
+        base_where = (self.model_group.user_id == user_id,)
         stmt_group = (
             select(self.model_group)
-            .where(self.model_group.user_id == user_id)
+            .where(*base_where)
             .order_by(self.model_group.created_at.asc())
-            .offset(limit * start)
+            .offset(start * limit)
             .limit(limit)
         )
-        res_group = await self.session.execute(stmt_group)
-        groups = res_group.scalars().all()
-        stmt_count_exercise = select(func.count()).select_from(
-            select(self.model_group.id).where(self.model_group.user_id == user_id).subquery()
-        )
-        total = (await self.session.execute(stmt_count_exercise)).scalar_one()
-        return groups, total
+        groups_result = await self.session.scalars(stmt_group)
+        groups = groups_result.all()
+
+        stmt_count = select(func.count()).select_from(self.model_group).where(*base_where)
+        total = await self.session.scalar(stmt_count)
+
+        return groups, int(total)
 
     async def get_users_in_group_by_id(self, list_users_id: List[int], group_id: int) -> List[GroupMemberModel] | None:
         stmt = (select(self.model_member_group)
@@ -135,12 +148,12 @@ class GroupRepository(BaseRepo):
         await self.session.commit()
 
     async def add_workout_in_group(self, id_group: int, id_workout: int) -> GroupMemberModel:
-        stmt = update(self.model_member_group).where(self.model_member_group.group_id == id_group).values(workout_id=id_workout)
+        stmt = update(self.model_member_group).where(self.model_member_group.group_id == id_group).values(
+            workout_id=id_workout)
         await self.session.execute(stmt)
         obj = await self.session.flush()
         result = await self.session.commit()
         return result
-
 
     async def remove_workout_from_group(self, id_group: int) -> None:
         stmt = (

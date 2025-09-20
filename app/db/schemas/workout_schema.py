@@ -1,7 +1,7 @@
 from typing import List, Sequence
 
-from db.schemas.base import BaseIdSchema, BaseModelSchema, BaseCreatedAndUpdateSchema
-from db.schemas.paginate import PageMeta
+from db.schemas.base_schema import BaseIdSchema, BaseModelSchema, BaseCreatedAndUpdateSchema
+from db.schemas.paginate_schema import PageMeta
 
 
 class WorkoutExerciseCreateSchema(BaseModelSchema):
@@ -27,8 +27,8 @@ class ExerciseFullSchema(BaseIdSchema, BaseCreatedAndUpdateSchema, BaseModelSche
     time_work: int | None
 
 
-class WorkoutExerciseFullSchema(BaseIdSchema,BaseCreatedAndUpdateSchema, BaseModelSchema):
-    exercises: ExerciseFullSchema
+class WorkoutExerciseFullSchema(BaseModelSchema):
+    exercise: ExerciseFullSchema
     position: int
 
 
@@ -37,7 +37,7 @@ class WorkoutGetOneSchema(BaseIdSchema, BaseCreatedAndUpdateSchema, WorkoutCreat
 
 
 class WorkoutFullSchema(WorkoutGetOneSchema):
-    workout_exercise: List[WorkoutExerciseFullSchema]
+    workout_exercises: List[WorkoutExerciseFullSchema]
 
 
 class WorkoutPage(BaseModelSchema):

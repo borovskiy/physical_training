@@ -11,19 +11,21 @@ class ExerciseModel(BaseModel):
     __tablename__ = "exercises"
 
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))  # владелец
+
     title: Mapped[str] = mapped_column(String(200))  # название
     type: Mapped[str] = mapped_column(String(50), default="strength")  # тип: strength/cardio/stretch
     description: Mapped[Optional[str]] = mapped_column(Text)  # описание выполнения
     media_url: Mapped[Optional[str]] = mapped_column(String(255))  # ссылка на картинку/видео
     meta: Mapped[Optional[dict]] = mapped_column(JSON)  # доп. данные (мышцы, длительность)
-
     time_work: Mapped[Optional[int]] = mapped_column(default=None)  # время выполнения (сек)
     repetitions: Mapped[Optional[int]] = mapped_column(default=None)  # количество повторов (одно приседание)
     count_sets: Mapped[Optional[int]] = mapped_column(default=None)  # количество сетов(10 приседаний один сет)
     rest_sec: Mapped[Optional[int]] = mapped_column(default=None)  # пауза после (сек)
 
     user: Mapped["UserModel"] = relationship(back_populates="exercises")
-    workouts_exercises: Mapped[List["WorkoutExerciseModel"]] = relationship(back_populates="exercises", cascade="all, delete-orphan")
+
+    workouts: Mapped[List["WorkoutModel"]] = relationship(secondary="association_workout_exercises", back_populates="exercises")
+    workout_exercises: Mapped[List["WorkoutExerciseModel"]] = relationship(back_populates="exercise")
 
     def get_media_url_path(self, file: UploadFile) -> str:
         return f"{self.user_id}/exercise_file/{self.id}/{file.filename}"

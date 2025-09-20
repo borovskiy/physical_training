@@ -7,9 +7,9 @@ from starlette import status
 from app.repositories.user_repository import UserRepository
 from core.config import settings
 from db.models import UserModel
-from db.schemas.user import UserRegisterSchema, UserPostModelUpdateSchema, UserAdminPutModelSchema
+from db.schemas.user_schema import UserRegisterSchema, UserPostModelUpdateSchema, UserAdminPutModelSchema
 from services.auth_service import issue_email_verify_token, hash_password, verify_email_for_confirm_email, \
-    check_active_and_confirmed_user
+    check_active_and_confirmed_user, _unauthorized, _ok, _badrequest
 from utils.context import get_current_user
 from utils.email import send_email
 
@@ -18,7 +18,7 @@ class UserServices:
     def __init__(self, session: AsyncSession):
         self.repo = UserRepository(session)
 
-    async def add_user(self, user: UserRegisterSchema):
+    async def create_user(self, user: UserRegisterSchema):
         find_user = await self.repo.find_user_email(user.email)
         if find_user is None:
             user.password_hash = hash_password(user.password_hash)
@@ -42,8 +42,8 @@ class UserServices:
         else:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"User with email: {user.email} exists")
 
-    async def remove_all_user(self):
-        await self.repo.remove_user_all()
+    # async def remove_all_user(self):
+    #     await self.repo.remove_user_all()
 
     async def confirm_email(self, token: str):
         try:
@@ -52,35 +52,36 @@ class UserServices:
             raise HTTPException(status_code=400, detail="Invalid or expired token")
         await self.repo.update_is_confirmed_user(token_data.user_id)
 
-    async def verify_user(self, user: UserRegisterSchema) -> str | None:
+    async def login_user(self, user: UserRegisterSchema) -> str | None:
         user_db = await self.repo.find_user_email(user.email)
         if user_db is None:
             raise HTTPException(status_code=404, detail="User not found")
 
         if check_active_and_confirmed_user(user_db):
             return issue_email_verify_token(user_db)
-        return None
+        raise _unauthorized("User is not active")
 
-    async def update_user_profile(self, user: UserPostModelUpdateSchema):
+    async def update_user_profile(self, user_schema: UserPostModelUpdateSchema):
         current_user = get_current_user()
-        update_user = await self.repo.update_profile_user(user.model_dump(), current_user.id)
+        update_user = await self.repo.update_user(user_schema.model_dump(), current_user.id)
         if update_user is not None:
             return update_user
         raise HTTPException(status_code=404, detail="User not found")
 
-    async def update_user_profile_admin(self, user_id: int, user: UserAdminPutModelSchema):
+    async def update_user_admin(self, user_id: int, user: UserAdminPutModelSchema):
         user_put = await self.repo.find_user_id(user_id)
         if user_put is None:
             raise HTTPException(status_code=404, detail="User not found")
-        update_user = await self.repo.update_profile_user(user.model_dump(), user_id)
+        update_user = await self.repo.update_user(user.model_dump(), user_id)
         if update_user is not None:
             return update_user
         raise HTTPException(status_code=404, detail="User not found")
 
-    async def find_user(self, user_id: int):
+    async def find_user(self, user_id: int) -> UserModel:
         return await self.repo.find_user_id(user_id)
 
-    async def remove_user(self, user_id: int):
-        user = await self.repo.find_user_id(user_id)
-        if user is not None:
-            await self.repo.remove_user_id(user)
+    async def remove_user(self, user_id: int) -> HTTPException:
+        if await self.repo.remove_user_id(user_id):
+            return _ok("User remove")
+        else:
+            return _badrequest("User not remove")

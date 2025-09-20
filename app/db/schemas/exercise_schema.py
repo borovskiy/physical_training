@@ -2,8 +2,9 @@ from typing import Optional, Dict, Any, Sequence
 
 from fastapi import Form
 
-from db.schemas.base import BaseModelSchema, BaseIdSchema, BaseCreatedAndUpdateSchema
-from db.schemas.paginate import PageMeta
+from db.models import ExerciseModel
+from db.schemas.base_schema import BaseModelSchema, BaseIdSchema, BaseCreatedAndUpdateSchema
+from db.schemas.paginate_schema import PageMeta
 
 
 class ExerciseSchema(BaseModelSchema, BaseIdSchema, BaseCreatedAndUpdateSchema):
@@ -12,7 +13,7 @@ class ExerciseSchema(BaseModelSchema, BaseIdSchema, BaseCreatedAndUpdateSchema):
     type: str
     description: str
     media_url: Optional[str] = None
-    meta: Optional[Dict[str, Any]] = None  # <-- допускаем None
+    meta: Optional[Dict[str, Any]] = None
 
 
 

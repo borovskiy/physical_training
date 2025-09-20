@@ -4,8 +4,8 @@ from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.models import UserModel, GroupModel
-from db.schemas.group import GroupCreateSchema, GroupMembersCreateSchema, GroupPage, GroupMembersAddSchema
-from db.schemas.paginate import PageMeta
+from db.schemas.group_schema import GroupCreateSchema, GroupMembersCreateSchema, GroupPage, GroupMembersAddSchema
+from db.schemas.paginate_schema import PageMeta
 
 from repositories.group_repositories import GroupRepository
 from repositories.user_repository import UserRepository
@@ -25,13 +25,13 @@ class GroupServices:
         current_user = get_current_user()
         return await self.repo.add_group(group_schema.model_dump(), current_user.id)
 
-    async def rename_group(self, group_id: int, group_name: str):
+    async def rename_group(self, group_id: int, group_name: str) -> GroupModel:
         current_user = get_current_user()
         group = await self.repo.get_group_by_id(group_id, current_user.id)
         if group is None:
             raise _forbidden("Not found group for you")
-        group.name = group_name
-        return await self.repo.rename_group(group)
+        await self.repo.rename_group(group_name, group_id)
+        return await self.repo.get_group_by_id(group_id, current_user.id)
 
     async def delete_group(self, group_id: int):
         current_user = get_current_user()
@@ -44,12 +44,12 @@ class GroupServices:
     async def add_members_in_group(self, id_group: int, members_schema: List[GroupMembersAddSchema]):
         current_user = get_current_user()
         list_members_id = {member.user_id for member in members_schema}
-        group = await self.repo.get_group_by_id(id_group, current_user.id)
+        group = await self.repo.get_group_by_id_with_members(id_group, current_user.id)
         if group is None:
             raise _forbidden("Not found group for you")
         if len(group.members) >= settings.MAX_COUNT_MEMBERS_GROUP:
             raise _forbidden("You cannot add more users to this group")
-        if list_members_id & {member.user.id for member in group.members}:
+        if list_members_id & {member.user.id for member in group.members if member.user is not None}:
             raise _forbidden(
                 f"you are trying to add users that are already in the list {[member.user.email for member in group.members]}")
         result = await self.user_repo.find_count_by_id(list(list_members_id))
@@ -69,7 +69,7 @@ class GroupServices:
 
     async def get_group_by_id(self, id_group: int) -> GroupModel:
         current_user = get_current_user()
-        group = await self.repo.get_group_by_id(id_group, current_user.id)
+        group = await self.repo.get_group_by_id_with_full_relation(id_group, current_user.id)
         if group is None:
             raise _forbidden("Not found group")
         return group

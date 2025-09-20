@@ -55,11 +55,15 @@ class UserRepository(BaseRepo):
         await self.session.commit()
         return result.rowcount > 0
 
-    async def remove_user_id(self, user: UserModel) -> None:
-        await self.session.delete(user)
+    async def remove_user_id(self, user_id: int) -> bool:
+        stmt = delete(self.model).where(self.model.id == user_id)
+        await self.session.execute(stmt)
         await self.session.commit()
+        if self.get_user_by_id(user_id) is None:
+            return True
+        return False
 
-    async def get_by_id(self, user_id: int | str) -> UserModel | None:
+    async def get_user_by_id(self, user_id: int | str) -> UserModel | None:
         stmt = select(self.model).where(self.model.id == int(user_id))
         res = await self.session.execute(stmt)
         return res.scalars().first()
@@ -69,7 +73,7 @@ class UserRepository(BaseRepo):
         await self.session.execute(stmt)
         await self.session.commit()
 
-    async def update_profile_user(self, data, user_id: int):
+    async def update_user(self, data, user_id: int):
         stmt = update(self.model).where(self.model.id == user_id).values(**data)
         result = await self.session.execute(stmt)
         if result.rowcount == 0:

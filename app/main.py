@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 def create_app() -> FastAPI:
     app = FastAPI(title="FitnessApp API", version="0.1.0")
     app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
-    app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
+    app.include_router(users.router, prefix="/api/v1/users/profile", tags=["users"])
     app.include_router(exercises.router, prefix="/api/v1/exercise", tags=["exercises"])
     app.include_router(workout.router, prefix="/api/v1/workout", tags=["workouts"])
     app.include_router(group.router, prefix="/api/v1/group", tags=["groups"])

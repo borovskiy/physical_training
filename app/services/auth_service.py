@@ -10,7 +10,7 @@ from passlib.context import CryptContext
 from app.core.config import settings
 
 from db.models import UserModel
-from db.schemas.auth import PayloadToken
+from db.schemas.auth_schema import PayloadToken
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -23,7 +23,6 @@ def verify_password(plain_password, hashed_password):
 
 def get_password_hash(password):
     return pwd_context.hash(password)
-
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
@@ -39,7 +38,6 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 
 _pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security_bearer = HTTPBearer(auto_error=False)
-
 
 
 def issue_email_verify_token(user: UserModel) -> str:
@@ -85,7 +83,7 @@ def hash_password(plain_password: str) -> str:
     return _pwd_ctx.hash(plain_password)
 
 
-def verify_password(plain_password: str, password_hash: str) -> bool:
+def verify_passwords(plain_password: str, password_hash: str) -> bool:
     """
     Сверяет присланный пароль с хэшем из БД.
     Возвращает True/False.
@@ -135,8 +133,14 @@ def verify_token(raw_token: str) -> PayloadToken:
 def _forbidden(detail: str = "Forbidden"):
     return HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=detail)
 
+
+def _notfound(detail: str = "Not found"):
+    return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
+
+
+def _badrequest(detail: str = "Not found"):
+    return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
+
+
 def _ok(detail: str = "OK"):
     return HTTPException(status_code=status.HTTP_200_OK, detail=detail)
-
-
-

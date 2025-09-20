@@ -2,8 +2,8 @@ from datetime import datetime
 
 from pydantic import ConfigDict
 
-from db.models.user import PlanEnum
-from db.schemas.base import BaseCreatedAndUpdateSchema, BaseIdSchema, BaseModelSchema
+from db.models.user_model import PlanEnum
+from db.schemas.base_schema import BaseCreatedAndUpdateSchema, BaseIdSchema, BaseModelSchema
 
 
 class UserRegisterSchema(BaseModelSchema):

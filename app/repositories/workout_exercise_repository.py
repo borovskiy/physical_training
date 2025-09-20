@@ -3,7 +3,7 @@ from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.models import WorkoutExerciseModel
-from db.schemas.workout import WorkoutExerciseCreateSchema
+from db.schemas.workout_schema import WorkoutExerciseCreateSchema
 from repositories.base_repositoriey import BaseRepo
 
 

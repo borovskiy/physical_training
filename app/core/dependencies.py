@@ -70,11 +70,10 @@ async def get_current_user_from_token(
         user_serv=Depends(user_services),  # чтобы достать repo
 ) -> UserModel:
     payload = verify_token(raw_token)
-    user = await user_serv.repo.get_by_id(payload.user_id)
+    user = await user_serv.repo.get_user_by_id(payload.user_id)
     if not user:
         raise _unauthorized("User not found")
 
-    # если нужно ограничить только активных/подтверждённых:
     if not check_active_and_confirmed_user(user):
         raise _unauthorized("User is inactive or not confirmed")
     set_current_user(user)
