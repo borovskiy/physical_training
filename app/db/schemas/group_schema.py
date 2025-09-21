@@ -9,6 +9,7 @@ from db.schemas.workout_schema import WorkoutGetOneSchema
 class GroupMembersAddSchema(BaseModelSchema):
     """
     /add_members_in_group/{group_id}
+    /remove_members_from_group/{member_id}/{group_id}
     """
     user_id: int
 
@@ -25,6 +26,7 @@ class GroupGetOneSchema(BaseIdSchema, BaseCreatedAndUpdateSchema, GroupCreateSch
     """
     /create_group
     /rename_group/{group_id}
+    /get_groups
     """
     pass
 
@@ -55,5 +57,5 @@ class GroupPage(BaseModelSchema):
     """
     /get_groups
     """
-    groups: Sequence[GroupGetSchema]
+    groups: Sequence[GroupGetOneSchema]
     meta: PageMeta

@@ -60,7 +60,7 @@ async def delete_group(
     return await group_serv.delete_group(group_id)
 
 
-@router.post("/add_members_in_group/{group_id}", response_model=List[GroupMembersCreateSchema],
+@router.put("/add_members_in_group/{group_id}", response_model=GroupGetSchema,
              status_code=status.HTTP_200_OK, dependencies=[Depends(require_user_attrs())])
 async def add_members_in_group(
         group_id: int,
@@ -70,14 +70,25 @@ async def add_members_in_group(
     return await group_serv.add_members_in_group(group_id, members_schema)
 
 
-@router.delete("/remove_members_from_group/{member_id}/{group_id}", status_code=status.HTTP_201_CREATED,
-               dependencies=[Depends(require_user_attrs())])
-async def remove_members_from_group(
-        member_id: int,
+@router.put("/add_workout_in_group/{workout_id}/{group_id}", response_model=GroupGetSchema,
+            status_code=status.HTTP_200_OK, dependencies=[Depends(require_user_attrs())])
+async def add_workout_in_group(
+        workout_id: int,
         group_id: int,
         group_serv: Annotated[GroupServices, Depends(group_services)],
 ):
-    return await group_serv.delete_member(member_id, group_id)
+    return await group_serv.add_workout_in_group(group_id, workout_id)
+
+
+@router.delete("/remove_members_from_group/{member_id}/{group_id}", response_model=GroupGetOneSchema,
+               status_code=status.HTTP_201_CREATED,
+               dependencies=[Depends(require_user_attrs())])
+async def remove_members_from_group(
+        group_id: int,
+        group_serv: Annotated[GroupServices, Depends(group_services)],
+        members_schema: List[GroupMembersAddSchema],
+):
+    return await group_serv.delete_members(members_schema, group_id)
 
 
 @router.delete("/remove_workout_from_group/{workout_id}/{group_id}", status_code=status.HTTP_200_OK,
@@ -88,13 +99,3 @@ async def remove_workout_from_group(
         group_serv: Annotated[GroupServices, Depends(group_services)],
 ):
     return await group_serv.delete_workout_from_group(workout_id, group_id)
-
-
-@router.put("/add_workout_in_group/{workout_id}/{group_id}", response_model=List[GroupMembersCreateSchema],
-            status_code=status.HTTP_200_OK, dependencies=[Depends(require_user_attrs())])
-async def add_workout_in_group(
-        workout_id: int,
-        group_id: int,
-        group_serv: Annotated[GroupServices, Depends(group_services)],
-):
-    return await group_serv.add_workout_in_group(group_id, workout_id)

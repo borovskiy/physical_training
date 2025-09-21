@@ -24,8 +24,8 @@ class ExerciseModel(BaseModel):
 
     user: Mapped["UserModel"] = relationship(back_populates="exercises")
 
-    workouts: Mapped[List["WorkoutModel"]] = relationship(secondary="association_workout_exercises", back_populates="exercises")
-    workout_exercises: Mapped[List["WorkoutExerciseModel"]] = relationship(back_populates="exercise")
+    workout_exercises: Mapped[List["WorkoutExerciseModel"]] = relationship(back_populates="exercise", overlaps="exercises")
+    workouts: Mapped[List["WorkoutModel"]] = relationship(secondary="association_workout_exercises", back_populates="exercises", overlaps="workout_exercises")
 
     def get_media_url_path(self, file: UploadFile) -> str:
         return f"{self.user_id}/exercise_file/{self.id}/{file.filename}"
