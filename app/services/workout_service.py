@@ -3,6 +3,7 @@ from typing import List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.config import get_limits
 from db.models import UserModel, WorkoutModel
 from db.schemas.paginate_schema import PageMeta
 from db.schemas.workout_schema import WorkoutCreateSchema, WorkoutExerciseCreateSchema, WorkoutPage
@@ -39,14 +40,15 @@ class WorkoutServices:
     async def create_workout(self, workout_schema: WorkoutCreateSchema,
                              exercises_schema: List[WorkoutExerciseCreateSchema]) -> WorkoutModel:
         current_user = get_current_user()
-
-        count_self_exercise = await self.repo_exercise.find_count_self_exercise(current_user.id, exercises_schema)
-        if count_self_exercise == len(set([i.exercise_id for i in exercises_schema])):
-            result_workout = await self.repo_workout.add_workout(workout_schema.model_dump(), self.req_user.id)
-            await self.repo_workout_exercise.add_workout_exercise(exercises_schema, result_workout.id, self.req_user.id)
-            return await self.get_workout_id(result_workout.id)
-        else:
+        list_id_exercise = list(set([i.exercise_id for i in exercises_schema]))
+        count_self_exercise = await self.repo_exercise.find_count_self_exercise(current_user.id, list_id_exercise)
+        if count_self_exercise != len(list_id_exercise):
             raise _forbidden("You do not have the right to use gestures that do not belong to you.")
+        if await self.repo_workout.get_workout_count(current_user.id) >= get_limits(current_user.plan).workouts_limit:
+            raise _forbidden("You have reached the limit for creating workouts.")
+        result_workout = await self.repo_workout.add_workout(workout_schema.model_dump(), current_user.id)
+        await self.repo_workout_exercise.add_workout_exercise(exercises_schema, result_workout.id, current_user.id)
+        return await self.get_workout_id(result_workout.id)
 
     async def remove_workout(self, workout_id: int):
         current_user = get_current_user()

@@ -3,7 +3,7 @@ from typing import List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.models import UserModel, GroupModel
+from db.models import GroupModel
 from db.schemas.group_schema import GroupCreateSchema, GroupMembersCreateSchema, GroupPage, GroupMembersAddSchema
 from db.schemas.paginate_schema import PageMeta
 
@@ -12,7 +12,7 @@ from repositories.user_repository import UserRepository
 from repositories.workout_repositories import WorkoutRepository
 from services.auth_service import _forbidden
 from utils.context import get_current_user
-from core.config import settings
+from core.config import settings, PLAN_LIMITS_BY_NAME, get_limits
 
 
 class GroupServices:
@@ -23,6 +23,8 @@ class GroupServices:
 
     async def create_group(self, group_schema: GroupCreateSchema):
         current_user = get_current_user()
+        if await self.repo.get_groups_user_count(current_user.id) >= get_limits(current_user.plan).groups_limit:
+            raise _forbidden("You have reached the limit for creating groups.")
         return await self.repo.add_group(group_schema.model_dump(), current_user.id)
 
     async def rename_group(self, group_id: int, group_name: str) -> GroupModel:
@@ -47,7 +49,7 @@ class GroupServices:
         group = await self.repo.get_group_by_id_with_full_relation(id_group, current_user.id)
         if group is None:
             raise _forbidden("Not found group for you")
-        if len(group.members) >= settings.MAX_COUNT_MEMBERS_GROUP:
+        if len(group.members) >= get_limits(current_user.plan).members_group_limit:
             raise _forbidden("You cannot add more users to this group")
         if list_members_id & {member.id for member in group.members if member is not None}:
             raise _forbidden(

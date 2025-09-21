@@ -26,13 +26,9 @@ class WorkoutRepository(BaseRepo):
         await self.session.refresh(obj)
         return obj
 
-    async def get_workout(self, workout_id: int) -> WorkoutModel:
-        stmt = select(self.workout_model).where(self.workout_model.id == workout_id).options(
-            joinedload(self.workout_model.workout_exercise)
-            .selectinload(WorkoutExerciseModel.exercises)
-        )
-        result = await self.session.execute(stmt)
-        return result.scalars().first()
+    async def get_workout_count(self, user_id: int) -> int:
+        stmt = select(func.count()).select_from(select(self.workout_model).where(self.workout_model.user_id == user_id).subquery())
+        return (await self.session.execute(stmt)).scalar_one()
 
     async def get_workout_with_user(self, workout_id: int, user_id: int) -> WorkoutModel:
         stmt = (

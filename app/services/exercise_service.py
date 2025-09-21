@@ -3,6 +3,7 @@ from math import ceil
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.config import get_limits
 from core.s3_cloud_connector import S3CloudConnector
 from db.models import UserModel, ExerciseModel
 from db.schemas.exercise_schema import CreateExerciseSchema, ExercisePage, PageMeta, UpdateExerciseSchema
@@ -34,9 +35,11 @@ class ExerciseServices:
 
     async def add_exercise(self, payload: CreateExerciseSchema, file: UploadFile) -> ExerciseModel:
         current_user = get_current_user()
+        if await self.repo.get_count_exercise_user(current_user.id) >= get_limits(current_user.plan).exercises_limit:
+            raise _forbidden("You have reached the limit for creating exercise.")
+
         new_exercise = await self.repo.add_exercise(payload.model_dump(), current_user.id)
-        link_exercise = await self.s3.upload_upload_file(self.s3.bucket, new_exercise.get_media_url_path(file), file,
-                                                         True)
+        link_exercise = await self.s3.upload_upload_file(self.s3.bucket, new_exercise.get_media_url_path(file), file,True)
         new_exercise = await self.repo.update_link_exercise(new_exercise.id, link_exercise)
         return new_exercise
 

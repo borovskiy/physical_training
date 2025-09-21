@@ -1,6 +1,9 @@
+import os
+from dataclasses import dataclass
 
 from pydantic_settings import BaseSettings
 
+from db.models.user_model import PlanEnum
 
 
 class Settings(BaseSettings):
@@ -20,7 +23,7 @@ class Settings(BaseSettings):
     CLOUD_ACCESS_KEY: str
     CLOUD_SECRET_KEY: str
     CLOUD_REGION: str
-    MAX_COUNT_MEMBERS_GROUP:int = 10
+    MAX_COUNT_MEMBERS_GROUP: int = 10
 
     class Config:
         env_file = "../test.env"
@@ -28,3 +31,38 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+
+@dataclass(frozen=True)
+class PlanLimits:
+    groups_limit: int
+    exercises_limit: int
+    workouts_limit: int
+    members_group_limit: int
+
+
+def env_int(key: str, default: int):
+    v = os.environ.get(key)
+    try:
+        return int(v) if v is not None else default
+    except ValueError:
+        return default
+
+
+PLAN_LIMITS_BY_NAME = {
+    "free": PlanLimits(
+        groups_limit=env_int("PLAN_COUNT_GROUP_FREE", 3),
+        exercises_limit=env_int("PLAN_COUNT_EXERCISE_FREE", 50),
+        workouts_limit=env_int("PLAN_COUNT_WORKOUT_FREE", 50),
+        members_group_limit=env_int("PLAN_COUNT_MEMBERS_GROUP_FREE", 3),
+    ),
+    "pro": PlanLimits(
+        groups_limit=env_int("PLAN_COUNT_GROUP_PRO", 100),
+        exercises_limit=env_int("PLAN_COUNT_EXERCISE_PRO", 2000),
+        workouts_limit=env_int("PLAN_COUNT_WORKOUT_PRO", 2000),
+        members_group_limit=env_int("PLAN_COUNT_MEMBERS_GROUP_PRO", 50),
+    ),
+}
+
+def get_limits(plan: PlanEnum) -> PlanLimits:
+    return PLAN_LIMITS_BY_NAME[plan.value]

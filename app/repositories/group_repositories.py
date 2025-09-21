@@ -91,6 +91,12 @@ class GroupRepository(BaseRepo):
 
         return groups, int(total)
 
+    async def get_groups_user_count(self, user_id: int) -> int:
+        base_where = (self.model_group.user_id == user_id,)
+        stmt_count = select(func.count()).select_from(self.model_group).where(*base_where)
+        total = await self.session.scalar(stmt_count)
+        return int(total)
+
     async def get_users_in_group_by_id(self, list_users_id: List[int], group_id: int) -> List[GroupMemberModel] | None:
         stmt = (select(self.model_member_group)
         .options(selectinload(self.model_member_group.user))

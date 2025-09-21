@@ -43,6 +43,12 @@ class ExerciseRepository(BaseRepo):
         total = (await self.session.execute(stmt_count_exercise)).scalar_one()
         return exercise, total
 
+    async def get_count_exercise_user(self, user_id: int) -> int:
+        stmt_count_exercise = select(func.count()).select_from(
+            select(self.model.id).where(self.model.user_id == user_id).subquery()
+        )
+        return (await self.session.execute(stmt_count_exercise)).scalar_one()
+
     async def get_by_id(self, user_id: int, exercise_id: int | str) -> ExerciseModel | None:
         stmt_exercise = (
             select(self.model)
@@ -69,13 +75,13 @@ class ExerciseRepository(BaseRepo):
         await self.session.commit()
         return result.scalar_one_or_none()
 
-    async def find_count_self_exercise(self, user_id: int, list_id_exercise: List[WorkoutExerciseCreateSchema]) -> int:
+    async def find_count_self_exercise(self, user_id: int, list_id_exercise: List[int]) -> int:
         stmt = (
             select(func.count())
             .select_from(self.model)  # или Workout
             .where(
                 self.model.user_id == user_id,  # для Workout -> Workout.user_id
-                self.model.id.in_([i.exercise_id for i in list_id_exercise]),
+                self.model.id.in_(list_id_exercise),
             )
         )
         cnt = await self.session.scalar(stmt)
