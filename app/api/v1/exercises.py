@@ -67,5 +67,5 @@ async def remove_exercises(
         exercise_id: int,
         exercise_serv: Annotated[ExerciseServices, Depends(exercise_services)],
 ):
-    result = await exercise_serv.remove_exercise(exercise_id)
+    result = await exercise_serv.remove_exercise_from_all(exercise_id)
     return result

@@ -1,17 +1,19 @@
 from typing import List, Any, Sequence
 
-from sqlalchemy import update, select, func, and_
+from sqlalchemy import update, select, func, and_, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.models import ExerciseModel
+from db.models import ExerciseModel, WorkoutExerciseModel
 from db.schemas.workout_schema import WorkoutExerciseCreateSchema
 from repositories.base_repositoriey import BaseRepo
+from services.auth_service import _forbidden
 
 
 class ExerciseRepository(BaseRepo):
     def __init__(self, session: AsyncSession):
         self.session = session
         self.model = ExerciseModel
+        self.model_workout_exercise = WorkoutExerciseModel
 
     async def add_exercise(self, data: dict, user_id: int) -> ExerciseModel:
         obj = self.model(**data)
@@ -87,6 +89,48 @@ class ExerciseRepository(BaseRepo):
         cnt = await self.session.scalar(stmt)
         return cnt
 
-    async def remove_exercise_id(self, exercise: ExerciseModel) -> ExerciseModel | None:
-        await self.session.delete(exercise)
-        await self.session.commit()
+    async def remove_exercise_id(self, exercise_id: int, start_index: int = 1) -> None:
+        workouts_touched: List[int] = []
+        total_deleted = 0
+
+        # Делать всё в рамках транзакции
+        async with self.session.begin():
+            # 1) получить список уникальных workout_id, где встречается это упражнение
+            stmt = select(self.model_workout_exercise.workout_id).where(self.model_workout_exercise.exercise_id == exercise_id).distinct()
+            res = await self.session.execute(stmt)
+            workout_ids = [row[0] for row in res.all()]
+
+            if not workout_ids:
+                raise _forbidden("Not Found workout for exercise Id")
+
+            for workout_id in workout_ids:
+                # 2) получить все association для этой тренировки, в порядке позиции
+                stmt = select(self.model_workout_exercise).where(self.model_workout_exercise.workout_id == workout_id).order_by(self.model_workout_exercise.position)
+                res = await self.session.execute(stmt)
+                assoc_list = res.scalars().all()
+
+                if not assoc_list:
+                    continue
+
+                # 3) сформировать список оставшихся (без указанного exercise_id)
+                remaining = [a for a in assoc_list if a.exercise_id != exercise_id]
+                removed_count = len(assoc_list) - len(remaining)
+                if removed_count == 0:
+                    continue  # в этой тренировке ничего не удалилось (на всякий случай)
+
+                # 4) удалить все association с данным exercise_id в этой тренировке
+                del_stmt = delete(self.model_workout_exercise).where(
+                    (self.model_workout_exercise.workout_id == workout_id) &
+                    (self.model_workout_exercise.exercise_id == exercise_id)
+                )
+                await self.session.execute(del_stmt)
+                total_deleted += removed_count
+                workouts_touched.append(workout_id)
+
+                # 5) перенумеровать оставшиеся записи последовательно (start_index, start_index+1, ...)
+                #    сохраняя их относительный порядок, который мы уже получили.
+                for new_pos, assoc in enumerate(remaining, start=start_index):
+                    # обновляем только если позиция изменилась (минимизируем UPDATE)
+                    if assoc.position != new_pos:
+                        upd = update(self.model_workout_exercise).where(self.model_workout_exercise.id == assoc.id).values(position=new_pos)
+                        await self.session.execute(upd)

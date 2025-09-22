@@ -65,11 +65,11 @@ class ExerciseServices:
         else:
             return _forbidden("No exercise found")
 
-    async def remove_exercise(self, exercise_id: int) -> ExerciseModel:
+    async def remove_exercise_from_all(self, exercise_id: int) -> ExerciseModel:
         current_user = get_current_user()
         exercise = await self.repo.get_by_id(current_user.id, exercise_id)
         if exercise is None:
             _forbidden("No exercise found")
         await self.s3.remove_file_url(self.s3.bucket, exercise.get_key_media_url_path_old())
-        await self.repo.remove_exercise_id(exercise)
+        await self.repo.remove_exercise_id(exercise_id)
         return exercise
