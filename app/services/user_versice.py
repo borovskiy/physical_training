@@ -7,11 +7,13 @@ from starlette import status
 from app.repositories.user_repository import UserRepository
 from core.config import settings
 from db.models import UserModel
+from db.models.user_model import TypeTokensEnum
 from db.schemas.user_schema import UserRegisterSchema, UserPostModelUpdateSchema, UserAdminPutModelSchema
-from services.auth_service import issue_email_verify_token, hash_password, verify_email_for_confirm_email, \
-    check_active_and_confirmed_user, _unauthorized, _ok, _badrequest
+from services.auth_service import issue_email_verify_token, get_password_hash, check_active_and_confirmed_user, \
+    _unauthorized, verify_password, verify_token
 from utils.context import get_current_user
 from utils.email import send_email
+from utils.raises import _forbidden, _ok, _bad_request
 
 
 class UserServices:
@@ -21,10 +23,10 @@ class UserServices:
     async def create_user(self, user: UserRegisterSchema):
         find_user = await self.repo.find_user_email(user.email)
         if find_user is None:
-            user.password_hash = hash_password(user.password_hash)
+            user.password_hash = get_password_hash(user.password_hash)
             user_dict = user.model_dump()
             user = await self.repo.add_user(user_dict)
-            token = issue_email_verify_token(user)
+            token = issue_email_verify_token(user, TypeTokensEnum.email_verify)
             link = f"{settings.APP_BASE_URL}/api/v1/auth/confirm?token={token}"
             html = f"""
               <p>Привет! Подтверди e-mail: <a href="{link}">{link}</a></p>
@@ -47,7 +49,9 @@ class UserServices:
 
     async def confirm_email(self, token: str):
         try:
-            token_data = verify_email_for_confirm_email(token)
+            token_data = verify_token(token)
+            if token_data.type != TypeTokensEnum.email_verify.name:
+                raise ValueError("Wrong token type")
         except Exception:
             raise HTTPException(status_code=400, detail="Invalid or expired token")
         await self.repo.update_is_confirmed_user(token_data.user_id)
@@ -56,9 +60,11 @@ class UserServices:
         user_db = await self.repo.find_user_email(user.email)
         if user_db is None:
             raise HTTPException(status_code=404, detail="User not found")
-
-        if check_active_and_confirmed_user(user_db):
-            return issue_email_verify_token(user_db)
+        if await verify_password(user.password_hash, user_db.password_hash) is False:
+            if user_db is None:
+                raise _forbidden("wrong password")
+        if await check_active_and_confirmed_user(user_db):
+            return await issue_email_verify_token(user_db, TypeTokensEnum.access)
         raise _unauthorized("User is not active")
 
     async def update_user_profile(self, user_schema: UserPostModelUpdateSchema):
@@ -84,4 +90,4 @@ class UserServices:
         if await self.repo.remove_user_id(user_id):
             return _ok("User remove")
         else:
-            return _badrequest("User not remove")
+            return _bad_request("User not remove")

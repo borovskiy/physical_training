@@ -10,9 +10,9 @@ from db.schemas.paginate_schema import PageMeta
 from repositories.group_repositories import GroupRepository
 from repositories.user_repository import UserRepository
 from repositories.workout_repositories import WorkoutRepository
-from services.auth_service import _forbidden
 from utils.context import get_current_user
-from core.config import settings, PLAN_LIMITS_BY_NAME, get_limits
+from core.config import get_limits
+from utils.raises import _forbidden, _not_found
 
 
 class GroupServices:
@@ -31,7 +31,7 @@ class GroupServices:
         current_user = get_current_user()
         group = await self.repo.get_group_by_id(group_id, current_user.id)
         if group is None:
-            raise _forbidden("Not found group for you")
+            raise _not_found("Not found group for you")
         await self.repo.rename_group(group_name, group_id)
         return await self.repo.get_group_by_id(group_id, current_user.id)
 

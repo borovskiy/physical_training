@@ -4,14 +4,14 @@ from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.config import get_limits
-from db.models import UserModel, WorkoutModel
+from db.models import WorkoutModel
 from db.schemas.paginate_schema import PageMeta
 from db.schemas.workout_schema import WorkoutCreateSchema, WorkoutExerciseCreateSchema, WorkoutPage
 from repositories.exercise_repositories import ExerciseRepository
 from repositories.workout_exercise_repository import WorkoutExerciseRepository
 from repositories.workout_repositories import WorkoutRepository
-from services.auth_service import _forbidden
 from utils.context import get_current_user
+from utils.raises import _forbidden, _not_found
 
 
 class WorkoutServices:
@@ -34,7 +34,7 @@ class WorkoutServices:
 
         workout = await self.repo_workout.get_workout_with_user(workout_id, current_user.id)
         if workout is None:
-            raise _forbidden("No workout found")
+            raise _not_found("No workout found")
         return workout
 
     async def create_workout(self, workout_schema: WorkoutCreateSchema,

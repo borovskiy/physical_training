@@ -1,6 +1,5 @@
 import enum
-import os
-from dataclasses import dataclass
+
 from typing import List
 from datetime import datetime, timezone
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -8,9 +7,15 @@ from sqlalchemy import String, Boolean, DateTime, Enum
 
 from app.db.base import BaseModel
 
+
 class PlanEnum(enum.Enum):
     free = "free"
     pro = "pro"
+
+
+class TypeTokensEnum(enum.Enum):
+    email_verify = "email_verify"
+    access = "access"
 
 
 class UserModel(BaseModel):

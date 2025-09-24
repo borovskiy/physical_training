@@ -24,9 +24,10 @@ class Settings(BaseSettings):
     CLOUD_SECRET_KEY: str
     CLOUD_REGION: str
     MAX_COUNT_MEMBERS_GROUP: int = 10
+    SERVER: str
 
     class Config:
-        env_file = "../test.env"
+        env_file = "../sandy.env"
         env_file_encoding = "utf-8"
 
 
@@ -63,6 +64,7 @@ PLAN_LIMITS_BY_NAME = {
         members_group_limit=env_int("PLAN_COUNT_MEMBERS_GROUP_PRO", 50),
     ),
 }
+
 
 def get_limits(plan: PlanEnum) -> PlanLimits:
     return PLAN_LIMITS_BY_NAME[plan.value]

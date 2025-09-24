@@ -6,18 +6,19 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from core.config import settings
 from core.s3_cloud_connector import S3CloudConnector
 from db.models import UserModel
-from services.auth_service import get_bearer_token, verify_token, _unauthorized, check_active_and_confirmed_user, \
-    _forbidden
+from services.auth_service import get_bearer_token, verify_token, check_active_and_confirmed_user
 from services.exercise_service import ExerciseServices
 from services.group_service import GroupServices
 from services.user_versice import UserServices
 from services.workout_service import WorkoutServices
 from utils.context import set_current_user
+from utils.raises import _forbidden, _unauthorized
 
 SessionLocal = async_sessionmaker(
     bind=create_async_engine(settings.DB_URL, echo=True, ),
     expire_on_commit=False,
 )
+
 
 async def get_db():
     async with SessionLocal() as session:
@@ -74,7 +75,7 @@ async def get_current_user_from_token(
     if not user:
         raise _unauthorized("User not found")
 
-    if not check_active_and_confirmed_user(user):
+    if not await check_active_and_confirmed_user(user):
         raise _unauthorized("User is inactive or not confirmed")
     set_current_user(user)
     return user

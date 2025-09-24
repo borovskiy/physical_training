@@ -1,2 +1,4 @@
 /app/training.db
-/test.env
+/sandy.env
+/tests.env
+/test_training.db

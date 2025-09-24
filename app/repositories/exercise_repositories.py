@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from db.models import ExerciseModel, WorkoutExerciseModel
 from db.schemas.workout_schema import WorkoutExerciseCreateSchema
 from repositories.base_repositoriey import BaseRepo
-from services.auth_service import _forbidden
+from utils.raises import _forbidden
 
 
 class ExerciseRepository(BaseRepo):
@@ -96,7 +96,8 @@ class ExerciseRepository(BaseRepo):
         # Делать всё в рамках транзакции
         async with self.session.begin():
             # 1) получить список уникальных workout_id, где встречается это упражнение
-            stmt = select(self.model_workout_exercise.workout_id).where(self.model_workout_exercise.exercise_id == exercise_id).distinct()
+            stmt = select(self.model_workout_exercise.workout_id).where(
+                self.model_workout_exercise.exercise_id == exercise_id).distinct()
             res = await self.session.execute(stmt)
             workout_ids = [row[0] for row in res.all()]
 
@@ -105,7 +106,8 @@ class ExerciseRepository(BaseRepo):
 
             for workout_id in workout_ids:
                 # 2) получить все association для этой тренировки, в порядке позиции
-                stmt = select(self.model_workout_exercise).where(self.model_workout_exercise.workout_id == workout_id).order_by(self.model_workout_exercise.position)
+                stmt = select(self.model_workout_exercise).where(
+                    self.model_workout_exercise.workout_id == workout_id).order_by(self.model_workout_exercise.position)
                 res = await self.session.execute(stmt)
                 assoc_list = res.scalars().all()
 
@@ -132,5 +134,6 @@ class ExerciseRepository(BaseRepo):
                 for new_pos, assoc in enumerate(remaining, start=start_index):
                     # обновляем только если позиция изменилась (минимизируем UPDATE)
                     if assoc.position != new_pos:
-                        upd = update(self.model_workout_exercise).where(self.model_workout_exercise.id == assoc.id).values(position=new_pos)
+                        upd = update(self.model_workout_exercise).where(
+                            self.model_workout_exercise.id == assoc.id).values(position=new_pos)
                         await self.session.execute(upd)

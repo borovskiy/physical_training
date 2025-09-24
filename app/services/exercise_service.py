@@ -5,11 +5,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.config import get_limits
 from core.s3_cloud_connector import S3CloudConnector
-from db.models import UserModel, ExerciseModel
+from db.models import ExerciseModel
 from db.schemas.exercise_schema import CreateExerciseSchema, ExercisePage, PageMeta, UpdateExerciseSchema
 from repositories.exercise_repositories import ExerciseRepository
-from services.auth_service import _forbidden
 from utils.context import get_current_user
+from utils.raises import _forbidden, _not_found
 
 
 class ExerciseServices:
@@ -30,7 +30,7 @@ class ExerciseServices:
         current_user = get_current_user()
         exercise = await self.repo.get_by_id(current_user.id, exercise_id)
         if exercise is None:
-            raise _forbidden("No exercise found")
+            raise _not_found("No exercise found")
         return exercise
 
     async def add_exercise(self, payload: CreateExerciseSchema, file: UploadFile) -> ExerciseModel:
@@ -39,7 +39,8 @@ class ExerciseServices:
             raise _forbidden("You have reached the limit for creating exercise.")
 
         new_exercise = await self.repo.add_exercise(payload.model_dump(), current_user.id)
-        link_exercise = await self.s3.upload_upload_file(self.s3.bucket, new_exercise.get_media_url_path(file), file,True)
+        link_exercise = await self.s3.upload_upload_file(self.s3.bucket, new_exercise.get_media_url_path(file), file,
+                                                         True)
         new_exercise = await self.repo.update_link_exercise(new_exercise.id, link_exercise)
         return new_exercise
 
