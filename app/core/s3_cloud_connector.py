@@ -61,8 +61,10 @@ class S3CloudConnector:
 
     async def remove_file_url(self, bucket, key):
         async with self.session.client("s3", endpoint_url=self.endpoint) as s3:
-            try:
-                return await s3.delete_object(Bucket=bucket, Key=key)
-            except ClientError as e:
-                print(f"Error: {e}")
-                return None
+            if key is not None:
+                try:
+                    return await s3.delete_object(Bucket=bucket, Key=key)
+                except ClientError as e:
+                    print(f"Error: {e}")
+                    return None
+            return None

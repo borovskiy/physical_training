@@ -66,7 +66,7 @@ class ExerciseServices:
         else:
             return _forbidden("No exercise found")
 
-    async def remove_exercise_from_all(self, exercise_id: int) -> ExerciseModel:
+    async def remove_exercise_from_all_workout(self, exercise_id: int) -> ExerciseModel:
         current_user = get_current_user()
         exercise = await self.repo.get_by_id(current_user.id, exercise_id)
         if exercise is None:

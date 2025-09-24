@@ -39,6 +39,7 @@ async def create_exercise(
 ):
     return await exercise_serv.get_exercise(exercise_id)
 
+
 @router.put("/update_exercise_data/{exercise_id}", response_model=ExerciseSchema, status_code=status.HTTP_200_OK,
             dependencies=[Depends(require_user_attrs())])
 async def update_exercise_data(
@@ -67,5 +68,5 @@ async def remove_exercises(
         exercise_id: int,
         exercise_serv: Annotated[ExerciseServices, Depends(exercise_services)],
 ):
-    result = await exercise_serv.remove_exercise_from_all(exercise_id)
+    result = await exercise_serv.remove_exercise_from_all_workout(exercise_id)
     return result
