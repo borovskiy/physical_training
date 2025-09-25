@@ -26,6 +26,7 @@ async def verify_password(plain_password, hashed_password):
 
 
 async def issue_email_verify_token(user: UserModel, type_token: TypeTokensEnum = TypeTokensEnum.email_verify) -> str:
+    logger.info("Issue email verify token")
     now = datetime.now(timezone.utc)
     payload = PayloadToken(
         token_limit_verify=int((now + timedelta(minutes=settings.VERIFY_TOKEN_TTL_MIN)).timestamp()),
@@ -37,34 +38,43 @@ async def issue_email_verify_token(user: UserModel, type_token: TypeTokensEnum =
 
 
 async def check_active_and_confirmed_user(user: UserModel) -> bool | HTTPException:
-    return await active_user(user) and await confirmed_user(user)
+    logger.info("Check active and confirmed user")
+    return await check_active_user(user) and await check_confirmed_user(user)
 
 
-async def active_user(user: UserModel) -> bool | HTTPException:
+async def check_active_user(user: UserModel) -> bool | HTTPException:
+    logger.info("Check active user")
     if not user.is_active:
+        logger.error("User is not active")
         raise _unauthorized("User is not active")
     return True
 
 
-async def confirmed_user(user: UserModel) -> bool | HTTPException:
+async def check_confirmed_user(user: UserModel) -> bool | HTTPException:
+    logger.info("Check confirmed user")
     if not user.is_confirmed or user.is_confirmed == False:
+        logger.error("User is not confirmed")
         raise _unauthorized("User is not confirmed")
     return True
 
 
 def get_password_hash(plain_password: str) -> str:
+    logger.info("Get password hash")
     return pwd_context.hash(plain_password)
 
 
 async def get_bearer_token(
         credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
 ) -> str:
+    logger.info("Get bearer token")
     if not credentials or credentials.scheme.lower() != "bearer":
+        logger.error("Authorization header missing or not Bearer")
         raise _unauthorized("Authorization header missing or not Bearer")
     return credentials.credentials
 
 
 def verify_token(raw_token: str) -> PayloadToken:
+    logger.info("verify token")
     try:
         payload = jwt.decode(
             raw_token,
@@ -72,10 +82,14 @@ def verify_token(raw_token: str) -> PayloadToken:
             algorithms=[settings.JWT_ALG],
         )
     except ExpiredSignatureError:
+        logger.error("Token expired")
         raise _unauthorized("Token expired")
     except InvalidSignatureError:
+        logger.error("Invalid signature")
         raise _unauthorized("Invalid signature")
     except InvalidTokenError:
+        logger.error("Invalid token")
         raise _unauthorized("Invalid token")
     payload = PayloadToken(**payload)
+    logger.error("Payload Token")
     return payload

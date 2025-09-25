@@ -57,7 +57,7 @@ class GroupServices:
         if list_members_id & {member.id for member in group.members if member is not None}:
             raise _forbidden(
                 f"you are trying to add users that are already in the list {[member.email for member in group.members]}")
-        result = await self.user_repo.find_count_by_id(list(list_members_id))
+        result = await self.user_repo.find_count_users_by_id(list(list_members_id))
         if len(list_members_id) != result:
             raise _forbidden("Not fount user in list")
 

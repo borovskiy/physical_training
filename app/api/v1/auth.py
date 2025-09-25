@@ -18,9 +18,9 @@ async def signup(sign_up_user: UserRegisterSchema,
                  user_serv: Annotated[UserServices, Depends(user_services)],
                  ):
     """
-    Минимальная регистрация:
-    - принимает email/пароль
-    - возвращает "фиктивный" токен
+    Minimum registration:
+    - accepts email/password
+    - returns a "dummy" token
     """
     logger.info("Try get user service")
     result = await user_serv.create_user(sign_up_user)
@@ -43,9 +43,9 @@ async def login(
         user_serv: Annotated[UserServices, Depends(user_services)],
 ):
     """
-    Минимальный логин:
-    - проверяет email/пароль
-    - возвращает "фиктивный" токен
+    Minimum login:
+    - checks email/password
+    - returns a "dummy" token
     """
     logger.info("Try get user service")
     token = await user_serv.login_user(data_user)

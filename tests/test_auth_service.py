@@ -4,8 +4,8 @@ import jwt
 import pytest
 from fastapi import HTTPException
 
-from app.services.auth_service import get_password_hash, verify_password, issue_email_verify_token, active_user, \
-    confirmed_user, check_active_and_confirmed_user
+from app.services.auth_service import get_password_hash, verify_password, issue_email_verify_token, check_active_user, \
+    check_confirmed_user, check_active_and_confirmed_user
 
 from core.config import settings
 from db.models import UserModel
@@ -76,7 +76,7 @@ class TestAuthClass:
     async def test_active_user(self, user_factory, is_active, result, ctx):
         user = user_factory(is_active=is_active)
         with ctx:
-            assert await active_user(user) is result
+            assert await check_active_user(user) is result
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -89,7 +89,7 @@ class TestAuthClass:
     async def test_confirmed_user(self, user_factory, result, is_confirmed, ctx):
         user = user_factory(is_confirmed=is_confirmed)
         with ctx:
-            assert await confirmed_user(user) is result
+            assert await check_confirmed_user(user) is result
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(

@@ -16,7 +16,6 @@ class ExerciseSchema(BaseModelSchema, BaseIdSchema, BaseCreatedAndUpdateSchema):
     meta: Optional[Dict[str, Any]] = None
 
 
-
 class UpdateExerciseSchema(BaseModelSchema):
     title: str
     type: str
@@ -40,5 +39,5 @@ class CreateExerciseSchema(UpdateExerciseSchema):
 
 
 class ExercisePage(BaseModelSchema):
-    exercise: Sequence[ExerciseSchema]
+    exercises: Sequence[ExerciseSchema]
     meta: PageMeta

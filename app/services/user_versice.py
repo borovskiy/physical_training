@@ -25,16 +25,19 @@ class UserServices:
 
     async def create_user(self, user: UserRegisterSchema):
         find_user = await self.repo.find_user_email(user.email)
+        logger.info("Find user %s", find_user.email)
         if find_user is None:
             user.password_hash = get_password_hash(user.password_hash)
             user_dict = user.model_dump()
             user = await self.repo.add_user(user_dict)
             token = issue_email_verify_token(user, TypeTokensEnum.email_verify)
+            logger.info("Create token for registration %s", token)
             link = f"{settings.APP_BASE_URL}/api/v1/auth/confirm?token={token}"
             html = f"""
               <p>Привет! Подтверди e-mail: <a href="{link}">{link}</a></p>
               <p>Ссылка действует {settings.VERIFY_TOKEN_TTL_MIN} минут.</p>
             """
+            logger.info("Send email")
             asyncio.create_task(
                 send_email(
                     to=user.email,
@@ -47,25 +50,28 @@ class UserServices:
         else:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"User with email: {user.email} exists")
 
-    # async def remove_all_user(self):
-    #     await self.repo.remove_user_all()
-
     async def confirm_email(self, token: str):
         try:
             token_data = verify_token(token)
             if token_data.type != TypeTokensEnum.email_verify.name:
+                logger.error("Wrong token type")
                 raise ValueError("Wrong token type")
         except Exception:
+            logger.error("Invalid or expired token")
             raise HTTPException(status_code=400, detail="Invalid or expired token")
         await self.repo.update_is_confirmed_user(token_data.user_id)
 
     async def login_user(self, user: UserRegisterSchema) -> str | None:
+        logger.info("Try login user %s ", user)
         user_db = await self.repo.find_user_email(user.email)
+        logger.info("Find user email %s ", user)
         if user_db is None:
+            logger.error("User not found")
             raise HTTPException(status_code=404, detail="User not found")
         if await verify_password(user.password_hash, user_db.password_hash) is False:
             if user_db is None:
-                raise _forbidden("wrong password")
+                logger.error("Wrong password")
+                raise _forbidden("Wrong password")
         if await check_active_and_confirmed_user(user_db):
             return await issue_email_verify_token(user_db, TypeTokensEnum.access)
         raise _unauthorized("User is not active")
