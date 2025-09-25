@@ -1,16 +1,9 @@
 import logging
 
-from sqlalchemy import select, func
 
-from db.base import BaseModel
-
-
-class BaseRepo:
+class BaseServices:
     def __init__(self):
         self.log = logging.LoggerAdapter(
             logging.getLogger(__name__),
             {"component": self.__class__.__name__}
         )
-
-    def get_limit(self):
-        raise Exception("Not func")

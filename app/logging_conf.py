@@ -7,8 +7,8 @@ from pathlib import Path
 _LOG_DIR = Path(__file__).resolve().parent
 _LOG_FILE = str((_LOG_DIR / "app.log"))
 
-request_id_var = contextvars.ContextVar("request_id", default="-")
-request_user_var = contextvars.ContextVar("request_user", default="-")
+request_id_var = contextvars.ContextVar("request_id", default="")
+request_user_var = contextvars.ContextVar("request_user", default="")
 
 
 class CorrelationIdFilter(logging.Filter):
@@ -20,12 +20,14 @@ class CorrelationIdFilter(logging.Filter):
             record.method = ""
         if not hasattr(record, "user"):
             record.user = request_user_var.get()
+        if not hasattr(record, "component"):
+            record.component = ""
         if not hasattr(record, "payload"):
             record.payload = ""
         return True
 
 
-LOG_FORMAT = "%(asctime)s %(levelname)s [%(process_id)s] [%(method)s] [%(route)s] [user:%(user)s] %(message)s %(payload)s"
+LOG_FORMAT = "%(asctime)s %(levelname)s [%(process_id)s] [%(method)s] [%(route)s] [user:%(user)s] [%(component)s] %(message)s %(payload)s"
 ACCESS_FORMAT = "%(asctime)s %(levelname)s [%(process_id)s] — %(message)s"
 
 LOGGING_CONFIG = {

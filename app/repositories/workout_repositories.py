@@ -1,4 +1,3 @@
-import logging
 from typing import List
 
 from sqlalchemy import select, func, and_, or_
@@ -10,11 +9,10 @@ from db.models.workout_model import WorkoutExerciseModel
 from db.schemas.workout_schema import WorkoutExerciseCreateSchema
 from repositories.base_repositoriey import BaseRepo
 
-logger = logging.getLogger(__name__)
-
 
 class WorkoutRepository(BaseRepo):
     def __init__(self, session: AsyncSession):
+        super().__init__()
         self.session = session
         self.workout_model = WorkoutModel
         self.model_group_member = GroupMemberModel
@@ -25,13 +23,13 @@ class WorkoutRepository(BaseRepo):
 
     async def add_workout(self, data: dict, exercises_schema: List[WorkoutExerciseCreateSchema],
                           user_id: int) -> WorkoutModel:
-        logger.info("Try create workout %s", data)
+        self.log.info("add_workout data %s", data)
         workout_obj = self.workout_model(**data)
         workout_obj.user_id = user_id
         for schema in exercises_schema:
             exercise = self.model_workout_exercise(**schema.model_dump())
             workout_obj.exercises.append(exercise)
-        logger.info("New workout %s", workout_obj)
+        self.log.info("New workout %s", workout_obj)
         self.session.add(workout_obj)
         await self.session.commit()
         await self.session.refresh(workout_obj)
@@ -39,27 +37,28 @@ class WorkoutRepository(BaseRepo):
 
     async def update_workout(self, workout_id: int, current_user_id: int,
                              exercises_schema: List[WorkoutExerciseCreateSchema]) -> WorkoutModel:
-        logger.info("Try update workout %s", workout_id)
+        self.log.info("update_workout id %s, user id %s, exercises_schema %s", workout_id, current_user_id,
+                      exercises_schema)
         workout_obj = await self.get_workout_with_user(workout_id, current_user_id)
-        logger.info("Try workout %s", workout_obj)
+        self.log.info("Workout %s", workout_obj)
         workout_obj.exercises.clear()
         for schema in exercises_schema:
             exercise = self.model_workout_exercise(**schema.model_dump())
             workout_obj.exercises.append(exercise)
         self.session.add(workout_obj)
-        logger.info("New workout %s", workout_obj)
+        self.log.info("New workout %s", workout_obj)
         await self.session.commit()
         await self.session.refresh(workout_obj)
         return workout_obj
 
     async def get_workout_count(self, user_id: int) -> int:
-        logger.info("Try workouts count")
+        self.log.info("get_workout_count user id %s", user_id)
         stmt = select(func.count()).select_from(
             select(self.workout_model).where(self.workout_model.user_id == user_id).subquery())
         return (await self.session.execute(stmt)).scalar_one()
 
     async def get_workout_with_user(self, workout_id: int, user_id: int) -> WorkoutModel:
-        logger.info("Try workout with user")
+        self.log.info("get_workout_with_user workout id %s, user id %s", workout_id, user_id)
         stmt = (
             select(self.workout_model)
             .options(
@@ -79,7 +78,7 @@ class WorkoutRepository(BaseRepo):
         return await self.session.scalar(stmt)
 
     async def get_all_workouts(self, user_id: int, limit: int, start: int):
-        logger.info("Try get limit workouts")
+        self.log.info("get_all_workouts user id %s limit %s start %s", user_id, limit, start)
         stmt = (
             select(self.workout_model)
             .options(
@@ -96,11 +95,11 @@ class WorkoutRepository(BaseRepo):
             .limit(limit)
         )
         workouts = (await self.session.execute(stmt)).scalars().all()
-        logger.info("Try get count workouts")
+        self.log.info("Try get count workouts")
         total = await self.get_workout_count(user_id)
         return workouts, total
 
     async def remove_workout_id(self, workout: WorkoutModel) -> WorkoutModel | None:
-        logger.info("Try remove workout by id %s", workout.id)
+        self.log.info("remove_workout_id id %s", workout.id)
         await self.session.delete(workout)
         await self.session.commit()
