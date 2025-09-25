@@ -92,9 +92,7 @@ class ExerciseRepository(BaseRepo):
         workouts_touched: set[int] = set()
         total_deleted = 0
 
-        # ↓↓↓ ключевая правка ↓↓↓
         async with self.session.begin_nested():
-            # 1) workout_ids
             stmt = select(self.model_workout_exercise.workout_id) \
                 .where(self.model_workout_exercise.exercise_id == exercise_id) \
                 .distinct()
@@ -105,7 +103,6 @@ class ExerciseRepository(BaseRepo):
                 raise _forbidden("Not Found workout for exercise Id")  # (логичнее 404, но оставляю как есть)
 
             for workout_id in workout_ids:
-                # 2) ассоциации по порядку
                 stmt = select(self.model_workout_exercise) \
                     .where(self.model_workout_exercise.workout_id == workout_id) \
                     .order_by(self.model_workout_exercise.position)
@@ -114,13 +111,11 @@ class ExerciseRepository(BaseRepo):
                 if not assoc_list:
                     continue
 
-                # 3) фильтрация
                 remaining = [a for a in assoc_list if a.exercise_id != exercise_id]
                 removed_count = len(assoc_list) - len(remaining)
                 if removed_count == 0:
                     continue
 
-                # 4) delete
                 del_stmt = delete(self.model_workout_exercise).where(
                     (self.model_workout_exercise.workout_id == workout_id) &
                     (self.model_workout_exercise.exercise_id == exercise_id)
@@ -129,7 +124,6 @@ class ExerciseRepository(BaseRepo):
                 total_deleted += removed_count
                 workouts_touched.add(workout_id)
 
-                # 5) перенумерация (минимизируем UPDATE)
                 for new_pos, assoc in enumerate(remaining, start=start_index):
                     if assoc.position != new_pos:
                         upd = update(self.model_workout_exercise) \
