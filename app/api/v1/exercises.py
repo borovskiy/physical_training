@@ -1,3 +1,4 @@
+import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, UploadFile
@@ -8,6 +9,7 @@ from db.schemas.exercise_schema import CreateExerciseSchema, ExerciseSchema, Exe
 from db.schemas.paginate_schema import PaginationGet
 from services.exercise_service import ExerciseServices
 
+logger = logging.getLogger(__name__)
 # /api/v1/exercise
 router = APIRouter()
 
@@ -19,6 +21,7 @@ async def create_exercise(
         exercise_schema: CreateExerciseSchema = Depends(CreateExerciseSchema.as_form),
         file: UploadFile = File(),
 ):
+    logger.info("Try get exercise service")
     return await exercise_serv.add_exercise(exercise_schema, file)
 
 
@@ -28,6 +31,7 @@ async def get_exercises(
         exercise_serv: Annotated[ExerciseServices, Depends(exercise_services)],
         pagination: PaginationGet = Depends(PaginationGet),
 ):
+    logger.info("Try get exercise services")
     return await exercise_serv.get_exercises(pagination.limit, pagination.start)
 
 
@@ -37,6 +41,7 @@ async def create_exercise(
         exercise_id: int,
         exercise_serv: Annotated[ExerciseServices, Depends(exercise_services)],
 ):
+    logger.info("Try get exercise services")
     return await exercise_serv.get_exercise(exercise_id)
 
 
@@ -47,6 +52,7 @@ async def update_exercise_data(
         exercise_serv: Annotated[ExerciseServices, Depends(exercise_services)],
         schema: UpdateExerciseSchema,
 ):
+    logger.info("Try get exercise services")
     result = await exercise_serv.update_exercise(exercise_id, schema)
     return result
 
@@ -58,6 +64,7 @@ async def update_exercise_file(
         exercise_serv: Annotated[ExerciseServices, Depends(exercise_services)],
         file: UploadFile = File(),
 ):
+    logger.info("Try get exercise services")
     result = await exercise_serv.update_file_exercise(exercise_id, file)
     return result
 
@@ -68,5 +75,6 @@ async def remove_exercises(
         exercise_id: int,
         exercise_serv: Annotated[ExerciseServices, Depends(exercise_services)],
 ):
+    logger.info("Try get exercise services")
     result = await exercise_serv.remove_exercise_from_all_workout(exercise_id)
     return result

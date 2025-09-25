@@ -1,3 +1,4 @@
+import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
@@ -6,6 +7,8 @@ from app.db.schemas.auth_schema import TokenResponse
 from core.dependencies import user_services
 from db.schemas.user_schema import UserRegisterSchema
 from services.user_versice import UserServices
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -19,18 +22,9 @@ async def signup(sign_up_user: UserRegisterSchema,
     - принимает email/пароль
     - возвращает "фиктивный" токен
     """
+    logger.info("Try get user service")
     result = await user_serv.create_user(sign_up_user)
-
     return result
-
-
-# @router.get("/remove_all_user")
-# async def remove_all_user(
-#         user_serv: Annotated[UserServices, Depends(user_services)],
-# ):
-#     await user_serv.remove_all_user()
-#
-#     return {"message": "Users removed"}
 
 
 @router.get("/confirm")
@@ -38,8 +32,8 @@ async def confirm_email(
         token: Annotated[str, Query(...)],
         user_serv: Annotated[UserServices, Depends(user_services)],
 ):
+    logger.info("Try get user service")
     await user_serv.confirm_email(token)
-
     return {"message": "Email confirmed"}
 
 
@@ -53,5 +47,6 @@ async def login(
     - проверяет email/пароль
     - возвращает "фиктивный" токен
     """
+    logger.info("Try get user service")
     token = await user_serv.login_user(data_user)
     return TokenResponse(access_token=token)

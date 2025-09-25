@@ -5,6 +5,7 @@ import sys
 
 from alembic import context
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+
 # гарантируем, что корень проекта в sys.path
 ROOT = Path(__file__).resolve().parents[3]
 if str(ROOT) not in sys.path:
@@ -16,8 +17,8 @@ if config.config_file_name:
     fileConfig(config.config_file_name)
 
 # --- импортируем настройки и модели ---
-from app.db.base import BaseModel                # noqa: E402
-import app.db.models                        # noqa: F401,E402
+from app.db.base import BaseModel  # noqa: E402
+import app.db.models  # noqa: F401,E402
 from app.core.config import settings
 
 target_metadata = BaseModel.metadata

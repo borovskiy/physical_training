@@ -1,3 +1,4 @@
+import logging
 from math import ceil
 
 from fastapi import UploadFile
@@ -11,6 +12,8 @@ from repositories.exercise_repositories import ExerciseRepository
 from utils.context import get_current_user
 from utils.raises import _forbidden, _not_found
 
+logger = logging.getLogger(__name__)
+
 
 class ExerciseServices:
     def __init__(self, session: AsyncSession):
@@ -19,7 +22,10 @@ class ExerciseServices:
 
     async def get_exercises(self, limit: int, start: int) -> ExercisePage:
         current_user = get_current_user()
+        logger.info("Try get exercises")
         exercise, total = await self.repo.get_all_exercise_user(current_user.id, limit, start)
+        logger.info("exercise %s", exercise)
+        logger.info("total %s", total)
         pages = ceil(total / limit) if limit else 1
         return ExercisePage(
             exercise=exercise,

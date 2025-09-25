@@ -1,3 +1,4 @@
+import logging
 from math import ceil
 from typing import List
 
@@ -13,6 +14,8 @@ from repositories.workout_repositories import WorkoutRepository
 from utils.context import get_current_user
 from core.config import get_limits
 from utils.raises import _forbidden, _not_found
+
+logger = logging.getLogger(__name__)
 
 
 class GroupServices:

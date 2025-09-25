@@ -24,6 +24,16 @@ class Settings(BaseSettings):
     CLOUD_SECRET_KEY: str
     CLOUD_REGION: str
     MAX_COUNT_MEMBERS_GROUP: int = 10
+
+    PLAN_COUNT_GROUP_FREE: int
+    PLAN_COUNT_EXERCISE_FREE: int
+    PLAN_COUNT_WORKOUT_FREE: int
+    PLAN_COUNT_MEMBERS_GROUP_FREE: int
+    PLAN_COUNT_GROUP_PRO: int
+    PLAN_COUNT_EXERCISE_PRO: int
+    PLAN_COUNT_WORKOUT_PRO: int
+    PLAN_COUNT_MEMBERS_GROUP_PRO: int
+
     SERVER: str
 
     class Config:
@@ -52,16 +62,16 @@ def env_int(key: str, default: int):
 
 PLAN_LIMITS_BY_NAME = {
     "free": PlanLimits(
-        groups_limit=env_int("PLAN_COUNT_GROUP_FREE", 3),
-        exercises_limit=env_int("PLAN_COUNT_EXERCISE_FREE", 50),
-        workouts_limit=env_int("PLAN_COUNT_WORKOUT_FREE", 50),
-        members_group_limit=env_int("PLAN_COUNT_MEMBERS_GROUP_FREE", 3),
+        groups_limit=env_int("PLAN_COUNT_GROUP_FREE", 1),
+        exercises_limit=env_int("PLAN_COUNT_EXERCISE_FREE", 1),
+        workouts_limit=env_int("PLAN_COUNT_WORKOUT_FREE", 1),
+        members_group_limit=env_int("PLAN_COUNT_MEMBERS_GROUP_FREE", 1),
     ),
     "pro": PlanLimits(
-        groups_limit=env_int("PLAN_COUNT_GROUP_PRO", 100),
-        exercises_limit=env_int("PLAN_COUNT_EXERCISE_PRO", 2000),
-        workouts_limit=env_int("PLAN_COUNT_WORKOUT_PRO", 2000),
-        members_group_limit=env_int("PLAN_COUNT_MEMBERS_GROUP_PRO", 50),
+        groups_limit=env_int("PLAN_COUNT_GROUP_PRO", 1),
+        exercises_limit=env_int("PLAN_COUNT_EXERCISE_PRO", 1),
+        workouts_limit=env_int("PLAN_COUNT_WORKOUT_PRO", 1),
+        members_group_limit=env_int("PLAN_COUNT_MEMBERS_GROUP_PRO", 1),
     ),
 }
 

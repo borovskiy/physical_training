@@ -1,3 +1,4 @@
+import logging
 from typing import Annotated, List
 
 from fastapi import APIRouter, Depends
@@ -12,6 +13,8 @@ from services.group_service import GroupServices
 
 router = APIRouter()
 
+logger = logging.getLogger(__name__)
+
 
 @router.get("/get_groups", response_model=GroupPage, status_code=status.HTTP_200_OK,
             dependencies=[Depends(require_user_attrs())])
@@ -20,6 +23,7 @@ async def get_groups(
         pagination: PaginationGet = Depends(PaginationGet),
 
 ):
+    logger.info("Try get group service")
     return await group_serv.get_groups_user(pagination.limit, pagination.start)
 
 
@@ -29,6 +33,7 @@ async def get_group_id(
         group_id: int,
         group_serv: Annotated[GroupServices, Depends(group_services)],
 ):
+    logger.info("Try get group service")
     return await group_serv.get_group_by_id(group_id)
 
 
@@ -38,6 +43,7 @@ async def create_group(
         group_serv: Annotated[GroupServices, Depends(group_services)],
         group_schema: GroupCreateSchema,
 ):
+    logger.info("Try get group service")
     return await group_serv.create_group(group_schema)
 
 
@@ -48,6 +54,7 @@ async def rename_group(
         group_serv: Annotated[GroupServices, Depends(group_services)],
         group_schema: GroupCreateSchema,
 ):
+    logger.info("Try get group service")
     return await group_serv.rename_group(group_id, group_schema.name)
 
 
@@ -57,16 +64,18 @@ async def delete_group(
         group_id: int,
         group_serv: Annotated[GroupServices, Depends(group_services)],
 ):
+    logger.info("Try get group service")
     return await group_serv.delete_group(group_id)
 
 
 @router.put("/add_members_in_group/{group_id}", response_model=GroupGetSchema,
-             status_code=status.HTTP_200_OK, dependencies=[Depends(require_user_attrs())])
+            status_code=status.HTTP_200_OK, dependencies=[Depends(require_user_attrs())])
 async def add_members_in_group(
         group_id: int,
         group_serv: Annotated[GroupServices, Depends(group_services)],
         members_schema: List[GroupMembersAddSchema],
 ):
+    logger.info("Try get group service")
     return await group_serv.add_members_in_group(group_id, members_schema)
 
 
@@ -77,6 +86,7 @@ async def add_workout_in_group(
         group_id: int,
         group_serv: Annotated[GroupServices, Depends(group_services)],
 ):
+    logger.info("Try get group service")
     return await group_serv.add_workout_in_group(group_id, workout_id)
 
 
@@ -88,6 +98,7 @@ async def remove_members_from_group(
         group_serv: Annotated[GroupServices, Depends(group_services)],
         members_schema: List[GroupMembersAddSchema],
 ):
+    logger.info("Try get group service")
     return await group_serv.delete_members(members_schema, group_id)
 
 
@@ -98,4 +109,5 @@ async def remove_workout_from_group(
         group_id: int,
         group_serv: Annotated[GroupServices, Depends(group_services)],
 ):
+    logger.info("Try get group service")
     return await group_serv.delete_workout_from_group(workout_id, group_id)

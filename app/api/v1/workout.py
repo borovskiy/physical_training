@@ -1,3 +1,4 @@
+import logging
 from typing import Annotated, List
 
 from fastapi import APIRouter, Depends
@@ -10,6 +11,7 @@ from db.schemas.workout_schema import WorkoutCreateSchema, WorkoutExerciseCreate
 from services.workout_service import WorkoutServices
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.get("/get_workouts", response_model=WorkoutPage, status_code=status.HTTP_200_OK,
@@ -18,6 +20,7 @@ async def get_workouts(
         workout_serv: Annotated[WorkoutServices, Depends(workout_services)],
         pagination: PaginationGet = Depends(PaginationGet),
 ):
+    logger.info("Try get workout service")
     return await workout_serv.get_workouts(pagination.limit, pagination.start)
 
 
@@ -27,6 +30,7 @@ async def get_workout(
         workout_id: int,
         workout_serv: Annotated[WorkoutServices, Depends(workout_services)],
 ):
+    logger.info("Try get workout service")
     return await workout_serv.get_workout_id(workout_id)
 
 
@@ -37,7 +41,19 @@ async def create_workout(
         workout_schema: WorkoutCreateSchema,
         exercises_schema: List[WorkoutExerciseCreateSchema],
 ):
+    logger.info("Try get workout service")
     return await workout_serv.create_workout(workout_schema, exercises_schema)
+
+
+@router.post("/update_workout/{workout_id}", response_model=WorkoutFullSchema, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_user_attrs())])
+async def create_workout(
+        workout_id: int,
+        workout_serv: Annotated[WorkoutServices, Depends(workout_services)],
+        exercises_schema: List[WorkoutExerciseCreateSchema],
+):
+    logger.info("Try get workout service")
+    return await workout_serv.update_workout(workout_id, exercises_schema)
 
 
 @router.delete("/{workout_id}", response_model=WorkoutExerciseCreateSchema, status_code=status.HTTP_200_OK,
@@ -46,4 +62,5 @@ async def remove_workout(
         workout_id: int,
         workout_serv: Annotated[WorkoutServices, Depends(workout_services)],
 ):
+    logger.info("Try get workout service")
     return await workout_serv.remove_workout(workout_id)

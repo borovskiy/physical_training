@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta, timezone
 
 import jwt
@@ -16,6 +17,8 @@ from utils.raises import _unauthorized
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 security_bearer = HTTPBearer(auto_error=False)
+
+logger = logging.getLogger(__name__)
 
 
 async def verify_password(plain_password, hashed_password):

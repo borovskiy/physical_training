@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +15,8 @@ from services.auth_service import issue_email_verify_token, get_password_hash, c
 from utils.context import get_current_user
 from utils.email import send_email
 from utils.raises import _forbidden, _ok, _bad_request
+
+logger = logging.getLogger(__name__)
 
 
 class UserServices:
