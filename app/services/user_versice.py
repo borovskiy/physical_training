@@ -27,7 +27,7 @@ class UserServices(BaseServices):
         self.log.info("create_user")
         find_user = await self.repo.find_user_email(user.email)
         if find_user is None:
-            user.password_hash = hash_password(user.password_hash)
+            user.password_hash = await hash_password(user.password_hash)
             user_dict = user.model_dump()
             user = await self.repo.add_user(user_dict)
             token = await issue_email_verify_token(user, TypeTokensEnum.email_verify)

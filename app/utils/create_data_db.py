@@ -35,7 +35,7 @@ async def create_db_data(count_user: int = 5, count_exercise_for_user: int = 40,
                     is_admin=(user_number == 0),
                 )
                 # хеш пароля — синхронная функция, вызываем заранее
-                user.password_hash = hash_password(user.email)
+                user.password_hash = await hash_password(user.email)
 
                 session.add(user)
                 # flush — чтобы user.id стал доступен без коммита
