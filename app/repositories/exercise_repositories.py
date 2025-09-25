@@ -136,3 +136,4 @@ class ExerciseRepository(BaseRepo):
                             .where(self.model_workout_exercise.id == assoc.id) \
                             .values(position=new_pos)
                         await self.session.execute(upd)
+        await self.session.commit()
