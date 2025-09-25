@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime, timedelta, timezone
 
+import bcrypt
 import jwt
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer, HTTPAuthorizationCredentials, HTTPBearer
@@ -14,15 +15,14 @@ from db.models.user_model import TypeTokensEnum
 from db.schemas.auth_schema import PayloadToken
 from utils.raises import _unauthorized
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto",
+)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 security_bearer = HTTPBearer(auto_error=False)
 
 logger = logging.getLogger(__name__)
-
-
-async def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
 
 
 async def issue_email_verify_token(user: UserModel, type_token: TypeTokensEnum = TypeTokensEnum.email_verify) -> str:
@@ -58,9 +58,13 @@ async def check_confirmed_user(user: UserModel) -> bool | HTTPException:
     return True
 
 
-def get_password_hash(plain_password: str) -> str:
-    logger.info("Get password hash")
-    return pwd_context.hash(plain_password)
+def hash_password(plain: str) -> str:
+    salt = bcrypt.gensalt(rounds=12)
+    return bcrypt.hashpw(plain.encode(), salt).decode()
+
+
+def verify_password(plain: str, hashed: str) -> bool:
+    return bcrypt.checkpw(plain.encode(), hashed.encode())
 
 
 async def get_bearer_token(

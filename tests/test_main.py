@@ -16,8 +16,3 @@ def setup_db():
 
     yield engine
     engine.dispose()
-
-
-def test_check():
-    x = 1
-    assert x == 1

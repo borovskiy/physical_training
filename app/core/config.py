@@ -1,3 +1,4 @@
+import enum
 import os
 from dataclasses import dataclass
 
@@ -34,6 +35,14 @@ class Settings(BaseSettings):
     PLAN_COUNT_WORKOUT_PRO: int
     PLAN_COUNT_MEMBERS_GROUP_PRO: int
 
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_DB: str
+
+    RABBITMQ_DEFAULT_USER: str
+    RABBITMQ_DEFAULT_PASS: str
+    AMQP_URL: str
+    REDIS_PASSWORD: str
     SERVER: str
 
     class Config:
@@ -50,6 +59,10 @@ class PlanLimits:
     exercises_limit: int
     workouts_limit: int
     members_group_limit: int
+
+
+class QeuesNameEnum(enum.Enum):
+    test_queues = "test_queues"
 
 
 def env_int(key: str, default: int):

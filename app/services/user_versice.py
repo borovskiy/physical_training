@@ -5,12 +5,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from app.repositories.user_repository import UserRepository
-from core.config import settings
+from core.config import settings, QeuesNameEnum
 from db.models import UserModel
 from db.models.user_model import TypeTokensEnum
+from db.schemas.qeue_schemas import QeueSignupUserSchema
 from db.schemas.user_schema import UserRegisterSchema, UserPostModelUpdateSchema, UserAdminPutModelSchema
-from services.auth_service import issue_email_verify_token, get_password_hash, check_active_and_confirmed_user, \
-    _unauthorized, verify_password, verify_token
+from services.auth_service import issue_email_verify_token, check_active_and_confirmed_user, \
+    _unauthorized, verify_password, verify_token, hash_password
 from services.base_services import BaseServices
 from utils.context import get_current_user
 from utils.email import send_email
@@ -23,14 +24,22 @@ class UserServices(BaseServices):
         self.repo = UserRepository(session)
 
     async def create_user(self, user: UserRegisterSchema):
+        self.log.info("create_user")
         find_user = await self.repo.find_user_email(user.email)
-        self.log.info("Find user %s", find_user.email)
         if find_user is None:
-            user.password_hash = get_password_hash(user.password_hash)
+            user.password_hash = hash_password(user.password_hash)
             user_dict = user.model_dump()
             user = await self.repo.add_user(user_dict)
-            token = issue_email_verify_token(user, TypeTokensEnum.email_verify)
+            token = await issue_email_verify_token(user, TypeTokensEnum.email_verify)
             self.log.info("Create token for registration %s", token)
+            data = QeueSignupUserSchema(
+                base_url=settings.APP_BASE_URL,
+                token=token,
+                verify_token_ttl_min=settings.VERIFY_TOKEN_TTL_MIN,
+                email_to=user.email,
+                subject="Подтверждение e-mail",
+            )
+            await self.rabbit_service.publish_json(data.model_dump(), queue=QeuesNameEnum.test_queues.value)
             link = f"{settings.APP_BASE_URL}/api/v1/auth/confirm?token={token}"
             html = f"""
               <p>Привет! Подтверди e-mail: <a href="{link}">{link}</a></p>

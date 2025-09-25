@@ -7,7 +7,7 @@ from core.config import settings
 from db.models import UserModel, ExerciseModel, WorkoutModel, WorkoutExerciseModel
 from faker import Faker
 
-from services.auth_service import get_password_hash
+from services.auth_service import hash_password
 
 
 async def create_db_data(count_user: int = 5, count_exercise_for_user: int = 40, count_workout_for_user: int = 5):
@@ -35,7 +35,7 @@ async def create_db_data(count_user: int = 5, count_exercise_for_user: int = 40,
                     is_admin=(user_number == 0),
                 )
                 # хеш пароля — синхронная функция, вызываем заранее
-                user.password_hash = get_password_hash(user.email)
+                user.password_hash = hash_password(user.email)
 
                 session.add(user)
                 # flush — чтобы user.id стал доступен без коммита

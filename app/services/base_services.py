@@ -1,5 +1,8 @@
 import logging
 
+from core.config import settings
+from services.rabbit_service import RabbitClientStateless
+
 
 class BaseServices:
     def __init__(self):
@@ -7,3 +10,4 @@ class BaseServices:
             logging.getLogger(__name__),
             {"component": self.__class__.__name__}
         )
+        self.rabbit_service = RabbitClientStateless(settings.AMQP_URL, default_queue="orders")
