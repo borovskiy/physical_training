@@ -15,7 +15,7 @@ async def create_db_data(count_user: int = 5, count_exercise_for_user: int = 40,
 
     # Убедитесь, что settings.DB_URL использует async-драйвер:
     # например: postgresql+asyncpg://user:pass@host:5432/dbname
-    engine = create_async_engine(settings.DB_URL, future=True)
+    engine = create_async_engine(settings.POSTGRES_URL, future=True)
     SessionLocal = async_sessionmaker(bind=engine, expire_on_commit=False)
 
     async with SessionLocal() as session:
