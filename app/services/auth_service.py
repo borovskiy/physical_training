@@ -10,10 +10,10 @@ from passlib.context import CryptContext
 
 from app.core.config import settings
 
-from db.models import UserModel
-from db.models.user_model import TypeTokensEnum
-from db.schemas.auth_schema import PayloadToken
-from utils.raises import _unauthorized
+from app.db.models import UserModel
+from app.db.models.user_model import TypeTokensEnum
+from app.db.schemas.auth_schema import PayloadToken
+from app.utils.raises import _unauthorized
 
 pwd_context = CryptContext(
     schemes=["bcrypt"],

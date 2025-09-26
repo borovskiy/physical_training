@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from pydantic_settings import BaseSettings
 
-from db.models.user_model import PlanEnum
+from app.db.models.user_model import PlanEnum
 
 
 class Settings(BaseSettings):
@@ -43,10 +43,12 @@ class Settings(BaseSettings):
     RABBITMQ_DEFAULT_PASS: str
     AMQP_URL: str
     REDIS_PASSWORD: str
+    REDIS_URL: str
+    TIMEZONE: str
     SERVER: str
 
     class Config:
-        env_file = "../sandy.env"
+        env_file = "sandy.env"
         env_file_encoding = "utf-8"
 
 

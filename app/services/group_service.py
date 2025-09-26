@@ -3,17 +3,17 @@ from typing import List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.models import GroupModel
-from db.schemas.group_schema import GroupCreateSchema, GroupMembersCreateSchema, GroupPage, GroupMembersAddSchema
-from db.schemas.paginate_schema import PageMeta
+from app.db.models import GroupModel
+from app.db.schemas.group_schema import GroupCreateSchema, GroupMembersCreateSchema, GroupPage, GroupMembersAddSchema
+from app.db.schemas.paginate_schema import PageMeta
 
-from repositories.group_repositories import GroupRepository
-from repositories.user_repository import UserRepository
-from repositories.workout_repositories import WorkoutRepository
-from services.base_services import BaseServices
-from utils.context import get_current_user
-from core.config import get_limits
-from utils.raises import _forbidden, _not_found
+from app.repositories.group_repositories import GroupRepository
+from app.repositories.user_repository import UserRepository
+from app.repositories.workout_repositories import WorkoutRepository
+from app.services.base_services import BaseServices
+from app.utils.context import get_current_user
+from app.core.config import get_limits
+from app.utils.raises import _forbidden, _not_found
 
 
 class GroupServices(BaseServices):

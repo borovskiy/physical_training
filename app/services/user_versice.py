@@ -5,17 +5,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from app.repositories.user_repository import UserRepository
-from core.config import settings, QeuesNameEnum
-from db.models import UserModel
-from db.models.user_model import TypeTokensEnum
-from db.schemas.qeue_schemas import QeueSignupUserSchema
-from db.schemas.user_schema import UserRegisterSchema, UserPostModelUpdateSchema, UserAdminPutModelSchema
-from services.auth_service import issue_email_verify_token, check_active_and_confirmed_user, \
+from app.celery_app import celery_app
+from app.core.config import settings, QeuesNameEnum
+from app.db.models import UserModel
+from app.db.models.user_model import TypeTokensEnum
+from app.db.schemas.qeue_schemas import QeueSignupUserSchema
+from app.db.schemas.user_schema import UserRegisterSchema, UserPostModelUpdateSchema, UserAdminPutModelSchema
+from app.services.auth_service import issue_email_verify_token, check_active_and_confirmed_user, \
     _unauthorized, verify_password, verify_token, hash_password
-from services.base_services import BaseServices
-from utils.context import get_current_user
-from utils.email import send_email
-from utils.raises import _forbidden, _ok, _bad_request
+from app.services.base_services import BaseServices
+from app.utils.context import get_current_user
+from app.utils.raises import _forbidden, _ok, _bad_request
 
 
 class UserServices(BaseServices):
@@ -29,7 +29,8 @@ class UserServices(BaseServices):
         if find_user is None:
             user.password_hash = await hash_password(user.password_hash)
             user_dict = user.model_dump()
-            user = await self.repo.add_user(user_dict)
+            # user = await self.repo.add_user(user_dict)
+            user = UserModel(email="russkiy1111@yandex.ru", password_hash="russkiy1111@yandex.ru", id=6)
             token = await issue_email_verify_token(user, TypeTokensEnum.email_verify)
             self.log.info("Create token for registration %s", token)
             data = QeueSignupUserSchema(
@@ -39,21 +40,9 @@ class UserServices(BaseServices):
                 email_to=user.email,
                 subject="Подтверждение e-mail",
             )
-            await self.rabbit_service.publish_json(data.model_dump(), queue=QeuesNameEnum.test_queues.value)
-            link = f"{settings.APP_BASE_URL}/api/v1/auth/confirm?token={token}"
-            html = f"""
-              <p>Привет! Подтверди e-mail: <a href="{link}">{link}</a></p>
-              <p>Ссылка действует {settings.VERIFY_TOKEN_TTL_MIN} минут.</p>
-            """
-            self.log.info("Send email")
-            asyncio.create_task(
-                send_email(
-                    to=user.email,
-                    subject="Подтверждение e-mail",
-                    html=html,
-                    text=f"Confirm: {link}",
-                )
-            )
+            celery_app.send_task(name='app.tasks.email_tasks.send_signup_email_task', args=(data.model_dump(),),
+                                 queue="test_queues")
+
             return user
         else:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"User with email: {user.email} exists")
