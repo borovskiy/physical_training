@@ -5,8 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from app.repositories.user_repository import UserRepository
-from app.celery_app import celery_app
-from app.core.config import settings, QeuesNameEnum
+from app.core.config import settings
 from app.db.models import UserModel
 from app.db.models.user_model import TypeTokensEnum
 from app.db.schemas.qeue_schemas import QeueSignupUserSchema
@@ -16,6 +15,7 @@ from app.services.auth_service import issue_email_verify_token, check_active_and
 from app.services.base_services import BaseServices
 from app.utils.context import get_current_user
 from app.utils.raises import _forbidden, _ok, _bad_request
+from app.tasks.email_tasks import send_signup_email_task
 
 
 class UserServices(BaseServices):
@@ -40,8 +40,7 @@ class UserServices(BaseServices):
                 email_to=user.email,
                 subject="Подтверждение e-mail",
             )
-            celery_app.send_task(name='app.tasks.email_tasks.send_signup_email_task', args=(data.model_dump(),),
-                                 queue="test_queues")
+            send_signup_email_task.delay(payload=data.model_dump())
 
             return user
         else:

@@ -1,14 +1,13 @@
-import enum
-import os
-from dataclasses import dataclass
+from typing import Optional
+from urllib.parse import quote_plus
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings
 
-from app.db.models.user_model import PlanEnum
+from app.db.models.user_model import PlanEnum, PlanLimits
 
 
 class Settings(BaseSettings):
-    DB_URL: str
     JWT_SECRET: str
     JWT_ALG: str
     VERIFY_TOKEN_TTL_MIN: int
@@ -38,6 +37,9 @@ class Settings(BaseSettings):
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
+    POSTGRES_HOST: str
+    POSTGRES_PORT: str
+    POSTGRES_URL: Optional[str] = None
 
     RABBITMQ_DEFAULT_USER: str
     RABBITMQ_DEFAULT_PASS: str
@@ -48,45 +50,35 @@ class Settings(BaseSettings):
     SERVER: str
 
     class Config:
-        env_file = "sandy.env"
+        env_file = "../sandy.env"
         env_file_encoding = "utf-8"
+
+    @model_validator(mode="after")
+    def assemble_urls(self) -> "Settings":
+        if not self.POSTGRES_URL:
+            self.POSTGRES_URL = (
+                "postgresql+asyncpg://"
+                f"{quote_plus(self.POSTGRES_USER)}:"
+                f"{quote_plus(self.POSTGRES_PASSWORD)}"
+                f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{quote_plus(self.POSTGRES_DB)}"
+            )
+        return self
 
 
 settings = Settings()
 
-
-@dataclass(frozen=True)
-class PlanLimits:
-    groups_limit: int
-    exercises_limit: int
-    workouts_limit: int
-    members_group_limit: int
-
-
-class QeuesNameEnum(enum.Enum):
-    test_queues = "test_queues"
-
-
-def env_int(key: str, default: int):
-    v = os.environ.get(key)
-    try:
-        return int(v) if v is not None else default
-    except ValueError:
-        return default
-
-
 PLAN_LIMITS_BY_NAME = {
-    "free": PlanLimits(
-        groups_limit=env_int("PLAN_COUNT_GROUP_FREE", 1),
-        exercises_limit=env_int("PLAN_COUNT_EXERCISE_FREE", 1),
-        workouts_limit=env_int("PLAN_COUNT_WORKOUT_FREE", 1),
-        members_group_limit=env_int("PLAN_COUNT_MEMBERS_GROUP_FREE", 1),
+    PlanEnum.free.name: PlanLimits(
+        groups_limit=PlanLimits.env_int("PLAN_COUNT_GROUP_FREE", 1),
+        exercises_limit=PlanLimits.env_int("PLAN_COUNT_EXERCISE_FREE", 1),
+        workouts_limit=PlanLimits.env_int("PLAN_COUNT_WORKOUT_FREE", 1),
+        members_group_limit=PlanLimits.env_int("PLAN_COUNT_MEMBERS_GROUP_FREE", 1),
     ),
-    "pro": PlanLimits(
-        groups_limit=env_int("PLAN_COUNT_GROUP_PRO", 1),
-        exercises_limit=env_int("PLAN_COUNT_EXERCISE_PRO", 1),
-        workouts_limit=env_int("PLAN_COUNT_WORKOUT_PRO", 1),
-        members_group_limit=env_int("PLAN_COUNT_MEMBERS_GROUP_PRO", 1),
+    PlanEnum.pro.name: PlanLimits(
+        groups_limit=PlanLimits.env_int("PLAN_COUNT_GROUP_PRO", 1),
+        exercises_limit=PlanLimits.env_int("PLAN_COUNT_EXERCISE_PRO", 1),
+        workouts_limit=PlanLimits.env_int("PLAN_COUNT_WORKOUT_PRO", 1),
+        members_group_limit=PlanLimits.env_int("PLAN_COUNT_MEMBERS_GROUP_PRO", 1),
     ),
 }
 

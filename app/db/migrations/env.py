@@ -22,13 +22,12 @@ import app.db.models  # noqa: F401,E402
 from app.core.config import settings
 
 target_metadata = BaseModel.metadata
-DB_URL = settings.DB_URL
 
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""
     context.configure(
-        url=DB_URL,
+        url=settings.POSTGRES_URL,
         target_metadata=target_metadata,
         literal_binds=True,
         compare_type=True,
@@ -53,7 +52,7 @@ def do_run_migrations(connection):
 
 async def run_migrations_online() -> None:
     """Run migrations in 'online' mode (async)."""
-    engine: AsyncEngine = create_async_engine(DB_URL, future=True)
+    engine: AsyncEngine = create_async_engine(settings.POSTGRES_URL, future=True)
 
     async with engine.connect() as conn:
         await conn.run_sync(do_run_migrations)

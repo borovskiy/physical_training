@@ -15,7 +15,7 @@ from app.utils.context import set_current_user
 from app.utils.raises import _forbidden, _unauthorized
 
 SessionLocal = async_sessionmaker(
-    bind=create_async_engine(settings.DB_URL, echo=False, ),
+    bind=create_async_engine(settings.POSTGRES_URL, echo=False, ),
     expire_on_commit=False,
 )
 

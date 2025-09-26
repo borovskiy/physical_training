@@ -1,4 +1,6 @@
 import enum
+import os
+from dataclasses import dataclass
 
 from typing import List
 from datetime import datetime, timezone
@@ -6,6 +8,22 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, Boolean, DateTime, Enum
 
 from app.db.base import BaseModel
+
+
+@dataclass(frozen=True)
+class PlanLimits:
+    groups_limit: int
+    exercises_limit: int
+    workouts_limit: int
+    members_group_limit: int
+
+    @staticmethod
+    def env_int(key: str, default: int):
+        v = os.environ.get(key)
+        try:
+            return int(v) if v is not None else default
+        except ValueError:
+            return default
 
 
 class PlanEnum(enum.Enum):

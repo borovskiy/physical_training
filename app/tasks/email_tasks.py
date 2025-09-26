@@ -9,7 +9,6 @@ from app.db.schemas.qeue_schemas import QeueSignupUserSchema
 
 @shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={"max_retries": 5})
 def send_signup_email_task(self, payload: dict[str, Any]) -> str:
-    raise Exception
     data = QeueSignupUserSchema(**payload)
     link = f"{settings.APP_BASE_URL}/api/v1/auth/confirm?token={data.token}"
     html = f"""
@@ -30,7 +29,7 @@ def send_signup_email_task(self, payload: dict[str, Any]) -> str:
         username=settings.SMTP_USER,
         password=settings.SMTP_PASS,
         start_tls=False,
-        use_tls=True,  # выбери один режим: либо use_tls=True, либо start_tls=True
+        use_tls=True,
         timeout=30,
     ))
     return "ok"
