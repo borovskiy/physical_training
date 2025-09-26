@@ -4,11 +4,11 @@ from typing import Annotated, List
 from fastapi import APIRouter, Depends
 from starlette import status
 
-from core.dependencies import require_user_attrs, workout_services
-from db.schemas.paginate_schema import PaginationGet
-from db.schemas.workout_schema import WorkoutCreateSchema, WorkoutExerciseCreateSchema, WorkoutFullSchema, \
+from app.core.dependencies import require_user_attrs, workout_services
+from app.db.schemas.paginate_schema import PaginationGet
+from app.db.schemas.workout_schema import WorkoutCreateSchema, WorkoutExerciseCreateSchema, WorkoutFullSchema, \
     WorkoutPage
-from services.workout_service import WorkoutServices
+from app.services.workout_service import WorkoutServices
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -38,22 +38,21 @@ async def get_workout(
              dependencies=[Depends(require_user_attrs())])
 async def create_workout(
         workout_serv: Annotated[WorkoutServices, Depends(workout_services)],
-        workout_schema: WorkoutCreateSchema,
-        exercises_schema: List[WorkoutExerciseCreateSchema],
+        workout_schema: WorkoutExerciseCreateSchema,
 ):
     logger.info("Try get workout service")
-    return await workout_serv.create_workout(workout_schema, exercises_schema)
+    return await workout_serv.create_workout(workout_schema)
 
 
-@router.post("/update_workout/{workout_id}", response_model=WorkoutFullSchema, status_code=status.HTTP_201_CREATED,
-             dependencies=[Depends(require_user_attrs())])
+@router.put("/update_workout/{workout_id}", response_model=WorkoutFullSchema, status_code=status.HTTP_201_CREATED,
+            dependencies=[Depends(require_user_attrs())])
 async def create_workout(
         workout_id: int,
         workout_serv: Annotated[WorkoutServices, Depends(workout_services)],
-        exercises_schema: List[WorkoutExerciseCreateSchema],
+        workout_schema: WorkoutExerciseCreateSchema,
 ):
     logger.info("Try get workout service")
-    return await workout_serv.update_workout(workout_id, exercises_schema)
+    return await workout_serv.update_workout(workout_id, workout_schema)
 
 
 @router.delete("/{workout_id}", response_model=WorkoutExerciseCreateSchema, status_code=status.HTTP_200_OK,

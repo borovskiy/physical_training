@@ -4,7 +4,7 @@ from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import GroupModel
-from app.db.schemas.group_schema import GroupCreateSchema, GroupMembersCreateSchema, GroupPage, GroupMembersAddSchema
+from app.db.schemas.group_schema import GroupCreateSchema, GroupPage, GroupMembersAddSchema
 from app.db.schemas.paginate_schema import PageMeta
 
 from app.repositories.group_repositories import GroupRepository
@@ -94,14 +94,12 @@ class GroupServices(BaseServices):
         await self.repo.remove_member_group_id(ids_members, group_id)
         return await self.repo.get_group_by_id_with_full_relation(group_id, current_user.id)
 
-    async def delete_workout_from_group(self, workout_id: int, group_id: int):
+    async def delete_workout_from_group(self, group_id: int):
         self.log.info("delete workout from group")
         current_user = get_current_user()
         group = await self.repo.get_group_by_id(group_id, current_user.id)
         if group is None:
             raise _forbidden("Not found group")
-        if workout_id not in [member.workout_id for member in group.members]:
-            raise _forbidden("Not found members")
         return await self.repo.remove_workout_from_group(group_id)
 
     async def add_workout_in_group(self, id_group: int, id_workout: int):

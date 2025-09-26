@@ -2,15 +2,18 @@ from __future__ import annotations
 from typing import Optional
 from contextvars import ContextVar
 
-from db.models import UserModel
+from fastapi import HTTPException
+from starlette import status
+
+from app.db.models import UserModel
 from logging_conf import request_user_var
+from utils.raises import _unauthorized
 
 _current_user: ContextVar[Optional[UserModel]] = ContextVar("current_user", default=None)
 
 
 def set_current_user(user: UserModel) -> None:
     _current_user.set(user)
-    # выбери, что логировать — id/email/username
     try:
         val = None
         if hasattr(user, "email") and user.email:
@@ -25,5 +28,5 @@ def set_current_user(user: UserModel) -> None:
 def get_current_user() -> UserModel:
     user = _current_user.get()
     if user is None:
-        raise RuntimeError("No current user in context")
+        raise _unauthorized("No current user")
     return user

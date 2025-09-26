@@ -18,8 +18,10 @@ class WorkoutModel(BaseModel):
     groups: Mapped[List["GroupModel"]] = relationship(back_populates="workout", cascade="all, delete-orphan")
 
     workout_exercises: Mapped[List["WorkoutExerciseModel"]] = relationship(back_populates="workout",
+                                                                           cascade="all, delete-orphan",
                                                                            order_by="WorkoutExerciseModel.position",
-                                                                           overlaps="workouts")
+                                                                           overlaps="workouts",
+                                                                           passive_deletes=True)
 
     exercises: Mapped[List["ExerciseModel"]] = relationship(secondary="association_workout_exercises",
                                                             back_populates="workouts", overlaps="workout_exercises")
@@ -28,11 +30,13 @@ class WorkoutModel(BaseModel):
 class WorkoutExerciseModel(BaseModel):
     __tablename__ = "association_workout_exercises"
 
-    workout_id: Mapped[int] = mapped_column(ForeignKey("workouts.id"))
-    exercise_id: Mapped[int] = mapped_column(ForeignKey("exercises.id"))
+    workout_id: Mapped[int] = mapped_column(ForeignKey("workouts.id", ondelete="CASCADE"))
+    exercise_id: Mapped[int] = mapped_column(ForeignKey("exercises.id", ondelete="CASCADE"))
 
     position: Mapped[int] = mapped_column(default=0)
     notes: Mapped[Optional[str]] = mapped_column(Text)
 
-    workout: Mapped["WorkoutModel"] = relationship(back_populates="workout_exercises", overlaps="workouts,exercises")
-    exercise: Mapped["ExerciseModel"] = relationship(back_populates="workout_exercises", overlaps="workouts,exercises")
+    workout: Mapped["WorkoutModel"] = relationship(back_populates="workout_exercises", overlaps="workouts,exercises",
+                                                   passive_deletes=True)
+    exercise: Mapped["ExerciseModel"] = relationship(back_populates="workout_exercises", overlaps="workouts,exercises",
+                                                     passive_deletes=True)

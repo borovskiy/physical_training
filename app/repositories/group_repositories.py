@@ -179,9 +179,9 @@ class GroupRepository(BaseRepo):
     async def remove_workout_from_group(self, id_group: int) -> None:
         self.log.info("remove_workout_from_group")
         stmt = (
-            update(self.model_member_group)
+            update(self.model_group)
             .where(
-                self.model_member_group.group_id == id_group,
+                self.model_group.id == id_group,
             ).values(workout_id=None)
         )
         await self.session.execute(stmt)

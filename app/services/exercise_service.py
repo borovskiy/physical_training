@@ -3,14 +3,14 @@ from math import ceil
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.config import get_limits
-from core.s3_cloud_connector import S3CloudConnector
-from db.models import ExerciseModel
-from db.schemas.exercise_schema import CreateExerciseSchema, ExercisePage, PageMeta, UpdateExerciseSchema
-from repositories.exercise_repositories import ExerciseRepository
-from services.base_services import BaseServices
-from utils.context import get_current_user
-from utils.raises import _forbidden, _not_found
+from app.core.config import get_limits
+from app.core.s3_cloud_connector import S3CloudConnector
+from app.db.models import ExerciseModel
+from app.db.schemas.exercise_schema import CreateExerciseSchema, ExercisePage, PageMeta, UpdateExerciseSchema
+from app.repositories.exercise_repositories import ExerciseRepository
+from app.services.base_services import BaseServices
+from app.utils.context import get_current_user
+from app.utils.raises import _forbidden, _not_found
 
 
 class ExerciseServices(BaseServices):
@@ -84,7 +84,7 @@ class ExerciseServices(BaseServices):
             self.log.info("new link exercise %s", link_exercise)
             new_exercise = await self.repo.update_link_exercise(exercise_id, link_exercise)
             if link_for_remove != name_key_file and link_for_remove is not None:
-                await self.s3.remove_file_url(self.s3.bucket, link_for_remove)
+                await self.s3.remove_file_url(self.s3.bucket, new_exercise.get_key(link_for_remove))
             return new_exercise
         else:
             self.log.error("No exercise found")

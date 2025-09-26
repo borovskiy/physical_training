@@ -6,7 +6,7 @@ from sqlalchemy.orm import selectinload, joinedload
 
 from app.db.models import WorkoutModel, GroupMemberModel, ExerciseModel, GroupModel, UserModel
 from app.db.models.workout_model import WorkoutExerciseModel
-from app.db.schemas.workout_schema import WorkoutExerciseCreateSchema
+from app.db.schemas.workout_schema import WorkoutExerciseCreateSchema, ExerciseCreateSchema
 from app.repositories.base_repositoriey import BaseRepo
 
 
@@ -21,14 +21,13 @@ class WorkoutRepository(BaseRepo):
         self.model_user = UserModel
         self.model_workout_exercise = WorkoutExerciseModel
 
-    async def add_workout(self, data: dict, exercises_schema: List[WorkoutExerciseCreateSchema],
-                          user_id: int) -> WorkoutModel:
+    async def add_workout(self, data: dict, exercises_schema: List[ExerciseCreateSchema], user_id: int) -> WorkoutModel:
         self.log.info("add_workout data %s", data)
         workout_obj = self.workout_model(**data)
         workout_obj.user_id = user_id
         for schema in exercises_schema:
             exercise = self.model_workout_exercise(**schema.model_dump())
-            workout_obj.exercises.append(exercise)
+            workout_obj.workout_exercises.append(exercise)
         self.log.info("New workout %s", workout_obj)
         self.session.add(workout_obj)
         await self.session.commit()
@@ -36,15 +35,18 @@ class WorkoutRepository(BaseRepo):
         return workout_obj
 
     async def update_workout(self, workout_id: int, current_user_id: int,
-                             exercises_schema: List[WorkoutExerciseCreateSchema]) -> WorkoutModel:
+                             workout_schema: WorkoutExerciseCreateSchema) -> WorkoutModel:
         self.log.info("update_workout id %s, user id %s, exercises_schema %s", workout_id, current_user_id,
-                      exercises_schema)
+                      workout_schema)
         workout_obj = await self.get_workout_with_user(workout_id, current_user_id)
         self.log.info("Workout %s", workout_obj)
-        workout_obj.exercises.clear()
-        for schema in exercises_schema:
+        workout_obj.title = workout_schema.workout.title
+        workout_obj.description = workout_schema.workout.description
+        workout_obj.workout_exercises.clear()
+        await self.session.flush()
+        for schema in workout_schema.exercises:
             exercise = self.model_workout_exercise(**schema.model_dump())
-            workout_obj.exercises.append(exercise)
+            workout_obj.workout_exercises.append(exercise)
         self.session.add(workout_obj)
         self.log.info("New workout %s", workout_obj)
         await self.session.commit()
@@ -64,6 +66,7 @@ class WorkoutRepository(BaseRepo):
             .options(
                 selectinload(self.workout_model.groups).selectinload(self.model_group.members),
                 selectinload(self.workout_model.workout_exercises).selectinload(self.model_workout_exercise.exercise),
+                selectinload(self.workout_model.exercises),
             )
             .where(
                 self.workout_model.id == workout_id,

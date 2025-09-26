@@ -4,10 +4,10 @@ from typing import Annotated, List
 from fastapi import APIRouter, Depends
 from starlette import status
 
-from core.dependencies import require_user_attrs, group_services
-from db.schemas.group_schema import GroupCreateSchema, GroupFullSchema, GroupMembersCreateSchema, \
+from app.core.dependencies import require_user_attrs, group_services
+from app.db.schemas.group_schema import GroupCreateSchema, GroupFullSchema, GroupMembersCreateSchema, \
     GroupPage, GroupGetSchema, GroupMembersAddSchema, GroupGetOneSchema
-from db.schemas.paginate_schema import PaginationGet
+from app.db.schemas.paginate_schema import PaginationGet
 
 from services.group_service import GroupServices
 
@@ -105,9 +105,8 @@ async def remove_members_from_group(
 @router.delete("/remove_workout_from_group/{workout_id}/{group_id}", status_code=status.HTTP_200_OK,
                dependencies=[Depends(require_user_attrs())])
 async def remove_workout_from_group(
-        workout_id: int,
         group_id: int,
         group_serv: Annotated[GroupServices, Depends(group_services)],
 ):
     logger.info("Try get group service")
-    return await group_serv.delete_workout_from_group(workout_id, group_id)
+    return await group_serv.delete_workout_from_group(group_id)

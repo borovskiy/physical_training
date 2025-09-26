@@ -110,8 +110,10 @@ class ExerciseRepository(BaseRepo):
             workout_ids = [row[0] for row in res.all()]
 
             if not workout_ids:
-                self.log.error("Not Found workout for exercise Id")
-                raise _forbidden("Not Found workout for exercise Id")  # (логичнее 404, но оставляю как есть)
+                self.log.info("Not Found workout for exercise Id")
+                del_stmt = delete(self.model).where(self.model.id == exercise_id)
+                await self.session.execute(del_stmt)
+                return await self.session.commit()
 
             for workout_id in workout_ids:
                 self.log.info("Workout id %s", workout_id)

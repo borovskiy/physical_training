@@ -1,7 +1,7 @@
 import logging
 
-from core.config import settings
-from services.rabbit_service import RabbitClientStateless
+from app.core.config import settings
+from app.services.rabbit_service import RabbitClientStateless
 
 
 class BaseServices:

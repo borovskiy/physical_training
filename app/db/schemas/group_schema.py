@@ -3,7 +3,7 @@ from typing import Sequence, List
 from app.db.schemas.base_schema import BaseModelSchema, BaseIdSchema, BaseCreatedAndUpdateSchema
 from app.db.schemas.paginate_schema import PageMeta
 from app.db.schemas.user_schema import UserGetGroupSchema
-from app.db.schemas.workout_schema import WorkoutGetOneSchema
+from app.db.schemas.workout_schema import WorkoutCreateSchema
 
 
 class GroupMembersAddSchema(BaseModelSchema):
@@ -37,7 +37,7 @@ class GroupGetSchema(BaseIdSchema, BaseCreatedAndUpdateSchema, GroupCreateSchema
     """
     user: UserGetGroupSchema
     members: List[UserGetGroupSchema] | None
-    workout: WorkoutGetOneSchema | None
+    workout: WorkoutCreateSchema | None
 
 
 class GroupFullSchema(GroupGetSchema):

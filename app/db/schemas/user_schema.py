@@ -1,7 +1,5 @@
 from datetime import datetime
 
-from pydantic import ConfigDict
-
 from app.db.models.user_model import PlanEnum
 from app.db.schemas.base_schema import BaseCreatedAndUpdateSchema, BaseIdSchema, BaseModelSchema
 
@@ -30,13 +28,17 @@ class PasswordUserSchema(BaseModelSchema):
 
 
 class SystemUserSchema(BaseModelSchema):
-    email: str
     is_active: bool
     is_confirmed: bool
     is_admin: bool
 
 
-class UserAdminGetModelSchema(BaseIdSchema, BaseCreatedAndUpdateSchema, UserGetModelSchema, SystemUserSchema):
+class SystemUserPutSchema(BaseModelSchema):
+    email: str
+
+
+class UserAdminGetModelSchema(BaseIdSchema, BaseCreatedAndUpdateSchema, UserGetModelSchema, SystemUserSchema,
+                              SystemUserPutSchema):
     model_config = {"from_attributes": True}
 
 

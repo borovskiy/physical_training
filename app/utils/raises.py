@@ -24,3 +24,7 @@ def _bad_request(detail: str = "Bad request"):
 
 def _ok(detail: str = "OK"):
     return HTTPException(status_code=status.HTTP_200_OK, detail=detail)
+
+
+def _conflict(detail: str = "Conflict"):
+    return HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail)

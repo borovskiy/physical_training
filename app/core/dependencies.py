@@ -48,12 +48,6 @@ def get_s3_connector() -> S3CloudConnector:
 def require_user_attrs(
         is_admin: Optional[bool] = False,
 ):
-    """
-    Возвращает зависимость, которая:
-    - сначала аутентифицирует пользователя (get_current_user_from_token),
-    - затем проверяет переданные флаги (если указаны).
-    """
-
     async def dep(current_user: Annotated[UserModel, Depends(get_current_user_from_token)]) -> UserModel:
         if is_admin:
             if bool(current_user.is_admin):
@@ -68,7 +62,7 @@ def require_user_attrs(
 
 async def get_current_user_from_token(
         raw_token: str = Depends(get_bearer_token),
-        user_serv=Depends(user_services),  # чтобы достать repo
+        user_serv=Depends(user_services),
 ) -> UserModel:
     payload = verify_token(raw_token)
     user = await user_serv.repo.get_user_by_id(payload.user_id)

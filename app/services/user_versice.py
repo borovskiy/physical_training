@@ -1,8 +1,5 @@
-import asyncio
-
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from starlette import status
 
 from app.repositories.user_repository import UserRepository
 from app.core.config import settings
@@ -14,8 +11,8 @@ from app.services.auth_service import issue_email_verify_token, check_active_and
     _unauthorized, verify_password, verify_token, hash_password
 from app.services.base_services import BaseServices
 from app.utils.context import get_current_user
-from app.utils.raises import _forbidden, _ok, _bad_request
-from app.tasks.email_tasks import send_signup_email_task
+from app.utils.raises import _forbidden, _ok, _bad_request, _conflict
+from celery_app import celery_app
 
 
 class UserServices(BaseServices):
@@ -29,8 +26,7 @@ class UserServices(BaseServices):
         if find_user is None:
             user.password_hash = await hash_password(user.password_hash)
             user_dict = user.model_dump()
-            # user = await self.repo.add_user(user_dict)
-            user = UserModel(email="russkiy1111@yandex.ru", password_hash="russkiy1111@yandex.ru", id=6)
+            user = await self.repo.add_user(user_dict)
             token = await issue_email_verify_token(user, TypeTokensEnum.email_verify)
             self.log.info("Create token for registration %s", token)
             data = QeueSignupUserSchema(
@@ -40,11 +36,10 @@ class UserServices(BaseServices):
                 email_to=user.email,
                 subject="Подтверждение e-mail",
             )
-            send_signup_email_task.delay(payload=data.model_dump())
-
+            celery_app.send_task(name='app.tasks.email_tasks.send_signup_email_task', args=(data.model_dump(),),
+                                 queue="test_queues")
             return user
-        else:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"User with email: {user.email} exists")
+        raise _conflict(f"User with email: {user.email} exists")
 
     async def confirm_email(self, token: str):
         try:

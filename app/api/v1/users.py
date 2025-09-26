@@ -4,12 +4,12 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from starlette import status
 
-from core.dependencies import user_services, require_user_attrs
-from db.schemas.user_schema import UserGetModelSchema, UserPostModelUpdateSchema, UserAdminPutModelSchema, \
+from app.core.dependencies import user_services, require_user_attrs
+from app.db.schemas.user_schema import UserGetModelSchema, UserPostModelUpdateSchema, UserAdminPutModelSchema, \
     UserAdminGetModelSchema
-from services.user_versice import UserServices
-from utils.context import get_current_user
-from utils.create_data_db import create_db_data
+from app.services.user_versice import UserServices
+from app.utils.context import get_current_user
+from app.utils.create_data_db import create_db_data
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ async def me_put(
 @router.get("/{user_id}", response_model=UserAdminGetModelSchema, status_code=status.HTTP_200_OK,
             dependencies=[Depends(require_user_attrs(is_admin=True))])
 async def get_user_id_for_admin(
-        user_id,
+        user_id: int,
         user_serv: Annotated[UserServices, Depends(user_services)],
 ):
     logger.info("Try get user service")
@@ -56,7 +56,7 @@ async def get_user_id_for_admin(
 @router.put("/{user_id}", response_model=UserAdminPutModelSchema, status_code=status.HTTP_200_OK,
             dependencies=[Depends(require_user_attrs(is_admin=True))])
 async def put_user_id_for_admin(
-        user_id,
+        user_id: int,
         data_user: UserAdminPutModelSchema,
         user_serv: Annotated[UserServices, Depends(user_services)],
 ):
