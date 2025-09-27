@@ -4,7 +4,7 @@ from fastapi import UploadFile
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, Text, ForeignKey, JSON
 
-from app.db.base import BaseModel
+from db.base import BaseModel
 
 
 class ExerciseModel(BaseModel):

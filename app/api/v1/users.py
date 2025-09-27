@@ -4,12 +4,12 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from starlette import status
 
-from app.core.dependencies import user_services, require_user_attrs
-from app.db.schemas.user_schema import UserGetModelSchema, UserPostModelUpdateSchema, UserAdminPutModelSchema, \
+from core.dependencies import user_services, require_user_attrs
+from db.schemas.user_schema import UserGetModelSchema, UserPostModelUpdateSchema, UserAdminPutModelSchema, \
     UserAdminGetModelSchema
-from app.services.user_versice import UserServices
-from app.utils.context import get_current_user
-from app.utils.create_data_db import create_db_data
+from services.user_versice import UserServices
+from utils.context import get_current_user
+from utils.create_data_db import create_db_data
 
 logger = logging.getLogger(__name__)
 

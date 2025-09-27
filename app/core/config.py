@@ -4,7 +4,7 @@ from urllib.parse import quote_plus
 from pydantic import model_validator
 from pydantic_settings import BaseSettings
 
-from app.db.models.user_model import PlanEnum, PlanLimits
+from db.models.user_model import PlanEnum, PlanLimits
 
 
 class Settings(BaseSettings):

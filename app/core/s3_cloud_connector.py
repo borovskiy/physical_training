@@ -1,7 +1,7 @@
 import aioboto3
 from botocore.exceptions import ClientError
 from fastapi import UploadFile
-from app.core.config import settings
+from core.config import settings
 
 
 class S3CloudConnector:

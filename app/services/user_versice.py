@@ -1,18 +1,18 @@
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.repositories.user_repository import UserRepository
-from app.core.config import settings
-from app.db.models import UserModel
-from app.db.models.user_model import TypeTokensEnum
-from app.db.schemas.qeue_schemas import QeueSignupUserSchema
-from app.db.schemas.user_schema import UserRegisterSchema, UserPostModelUpdateSchema, UserAdminPutModelSchema
-from app.services.auth_service import issue_email_verify_token, check_active_and_confirmed_user, \
+from repositories.user_repository import UserRepository
+from core.config import settings
+from db.models import UserModel
+from db.models.user_model import TypeTokensEnum
+from db.schemas.qeue_schemas import QeueSignupUserSchema
+from db.schemas.user_schema import UserRegisterSchema, UserPostModelUpdateSchema, UserAdminPutModelSchema
+from services.auth_service import issue_email_verify_token, check_active_and_confirmed_user, \
     _unauthorized, verify_password, verify_token, hash_password
-from app.services.base_services import BaseServices
-from app.utils.context import get_current_user
-from app.utils.raises import _forbidden, _ok, _bad_request, _conflict
-from app.celery_app import celery_app
+from services.base_services import BaseServices
+from utils.context import get_current_user
+from utils.raises import _forbidden, _ok, _bad_request, _conflict
+from celery_app import celery_app
 
 
 class UserServices(BaseServices):
@@ -36,7 +36,7 @@ class UserServices(BaseServices):
                 email_to=user.email,
                 subject="Подтверждение e-mail",
             )
-            celery_app.send_task(name='app.tasks.email_tasks.send_signup_email_task', args=(data.model_dump(),),
+            celery_app.send_task(name='tasks.email_tasks.send_signup_email_task', args=(data.model_dump(),),
                                  queue="test_queues")
             return user
         raise _conflict(f"User with email: {user.email} exists")

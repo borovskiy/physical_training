@@ -2,9 +2,9 @@ from __future__ import annotations
 from typing import Optional
 from contextvars import ContextVar
 
-from app.db.models import UserModel
-from app.logging_conf import request_user_var
-from app.utils.raises import _unauthorized
+from db.models import UserModel
+from logging_conf import request_user_var
+from utils.raises import _unauthorized
 
 _current_user: ContextVar[Optional[UserModel]] = ContextVar("current_user", default=None)
 

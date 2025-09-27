@@ -17,9 +17,9 @@ if config.config_file_name:
     fileConfig(config.config_file_name)
 
 # --- импортируем настройки и модели ---
-from app.db.base import BaseModel  # noqa: E402
+from db.base import BaseModel  # noqa: E402
 import app.db.models  # noqa: F401,E402
-from app.core.config import settings
+from core.config import settings
 
 target_metadata = BaseModel.metadata
 

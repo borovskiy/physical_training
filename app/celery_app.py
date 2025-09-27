@@ -1,7 +1,7 @@
-from celery import Celery
 from dotenv import load_dotenv
-
-from app.core.config import settings
+from celery import Celery
+from kombu import Queue, Exchange
+from core.config import settings
 
 load_dotenv()
 
@@ -10,7 +10,7 @@ celery_app = Celery(
     broker=settings.AMQP_URL,
     backend=settings.REDIS_URL,
     include=[
-        "app.tasks.email_tasks",
+        "tasks.email_tasks",
     ],
 )
 
@@ -21,6 +21,10 @@ celery_app.conf.update(
     timezone=settings.TIMEZONE,
     enable_utc=True,
     task_default_queue="default",
+    task_queues=(
+        Queue("default", Exchange("default"), routing_key="default.#"),
+        Queue("test_queues", Exchange("test"), routing_key="test.#"),
+    ),
     task_acks_late=True,
     worker_prefetch_multiplier=1,
     broker_heartbeat=30,

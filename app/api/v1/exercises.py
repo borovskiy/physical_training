@@ -4,10 +4,10 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, File, UploadFile
 from starlette import status
 
-from app.core.dependencies import exercise_services, require_user_attrs
-from app.db.schemas.exercise_schema import CreateExerciseSchema, ExerciseSchema, ExercisePage, UpdateExerciseSchema
-from app.db.schemas.paginate_schema import PaginationGet
-from app.services.exercise_service import ExerciseServices
+from core.dependencies import exercise_services, require_user_attrs
+from db.schemas.exercise_schema import CreateExerciseSchema, ExerciseSchema, ExercisePage, UpdateExerciseSchema
+from db.schemas.paginate_schema import PaginationGet
+from services.exercise_service import ExerciseServices
 
 logger = logging.getLogger(__name__)
 # /api/v1/exercise

@@ -4,11 +4,11 @@ from typing import Annotated, List
 from fastapi import APIRouter, Depends
 from starlette import status
 
-from app.core.dependencies import require_user_attrs, group_services
-from app.db.schemas.group_schema import GroupCreateSchema, GroupFullSchema, GroupMembersCreateSchema, \
+from core.dependencies import require_user_attrs, group_services
+from db.schemas.group_schema import GroupCreateSchema, GroupFullSchema, GroupMembersCreateSchema, \
     GroupPage, GroupGetSchema, GroupMembersAddSchema, GroupGetOneSchema
-from app.db.schemas.paginate_schema import PaginationGet
-from app.services.group_service import GroupServices
+from db.schemas.paginate_schema import PaginationGet
+from services.group_service import GroupServices
 
 router = APIRouter()
 

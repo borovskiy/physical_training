@@ -4,11 +4,11 @@ from typing import Annotated, List
 from fastapi import APIRouter, Depends
 from starlette import status
 
-from app.core.dependencies import require_user_attrs, workout_services
-from app.db.schemas.paginate_schema import PaginationGet
-from app.db.schemas.workout_schema import WorkoutCreateSchema, WorkoutExerciseCreateSchema, WorkoutFullSchema, \
+from core.dependencies import require_user_attrs, workout_services
+from db.schemas.paginate_schema import PaginationGet
+from db.schemas.workout_schema import WorkoutCreateSchema, WorkoutExerciseCreateSchema, WorkoutFullSchema, \
     WorkoutPage
-from app.services.workout_service import WorkoutServices
+from services.workout_service import WorkoutServices
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

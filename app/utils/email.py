@@ -1,7 +1,7 @@
 # app/utils/email.py
 from email.message import EmailMessage
 import aiosmtplib
-from app.core.config import settings
+from core.config import settings
 
 
 async def send_email(to: str, subject: str, html: str, text: str | None = None):

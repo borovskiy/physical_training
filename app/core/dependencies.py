@@ -3,16 +3,16 @@ from typing import Annotated, Optional
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from app.core.config import settings
-from app.core.s3_cloud_connector import S3CloudConnector
-from app.db.models import UserModel
-from app.services.auth_service import get_bearer_token, verify_token, check_active_and_confirmed_user
-from app.services.exercise_service import ExerciseServices
-from app.services.group_service import GroupServices
-from app.services.user_versice import UserServices
-from app.services.workout_service import WorkoutServices
-from app.utils.context import set_current_user
-from app.utils.raises import _forbidden, _unauthorized
+from core.config import settings
+from core.s3_cloud_connector import S3CloudConnector
+from db.models import UserModel
+from services.auth_service import get_bearer_token, verify_token, check_active_and_confirmed_user
+from services.exercise_service import ExerciseServices
+from services.group_service import GroupServices
+from services.user_versice import UserServices
+from services.workout_service import WorkoutServices
+from utils.context import set_current_user
+from utils.raises import _forbidden, _unauthorized
 
 SessionLocal = async_sessionmaker(
     bind=create_async_engine(settings.POSTGRES_URL, echo=False, ),

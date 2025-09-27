@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from app.db.models.user_model import PlanEnum
-from app.db.schemas.base_schema import BaseCreatedAndUpdateSchema, BaseIdSchema, BaseModelSchema
+from db.models.user_model import PlanEnum
+from db.schemas.base_schema import BaseCreatedAndUpdateSchema, BaseIdSchema, BaseModelSchema
 
 
 class UserRegisterSchema(BaseModelSchema):

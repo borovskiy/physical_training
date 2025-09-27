@@ -3,8 +3,8 @@ from typing import List, Any, Sequence
 from sqlalchemy import update, select, func, and_, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models import ExerciseModel, WorkoutExerciseModel
-from app.repositories.base_repositoriey import BaseRepo
+from db.models import ExerciseModel, WorkoutExerciseModel
+from repositories.base_repositoriey import BaseRepo
 
 
 class ExerciseRepository(BaseRepo):

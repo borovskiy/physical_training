@@ -3,8 +3,8 @@ from typing import Any
 
 from celery import shared_task
 
-from app.core.config import settings
-from app.db.schemas.qeue_schemas import QeueSignupUserSchema
+from core.config import settings
+from db.schemas.qeue_schemas import QeueSignupUserSchema
 
 
 @shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, retry_kwargs={"max_retries": 5})

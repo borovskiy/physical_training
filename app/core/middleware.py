@@ -6,7 +6,7 @@ from typing import Callable, Awaitable, Optional, Dict, Any
 from urllib.parse import parse_qs
 
 from starlette.types import Scope, Receive, Send, Message
-from app.logging_conf import request_id_var, setup_logging
+from logging_conf import request_id_var, setup_logging
 
 setup_logging()
 _base_logger = logging.getLogger(__name__)

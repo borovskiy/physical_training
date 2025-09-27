@@ -1,7 +1,7 @@
 from typing import List
 
-from app.db.schemas.workout_schema import ExerciseCreateSchema
-from app.utils.raises import _forbidden
+from db.schemas.workout_schema import ExerciseCreateSchema
+from utils.raises import _forbidden
 
 
 async def get_list_set_exercises_schema(exercise_schemas: List[ExerciseCreateSchema]) -> list[int]:

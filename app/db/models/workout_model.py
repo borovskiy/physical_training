@@ -3,7 +3,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, Text, ForeignKey
 
-from app.db.base import BaseModel
+from db.base import BaseModel
 
 
 class WorkoutModel(BaseModel):

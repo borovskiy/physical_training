@@ -1,9 +1,9 @@
 from typing import Sequence, List
 
-from app.db.schemas.base_schema import BaseModelSchema, BaseIdSchema, BaseCreatedAndUpdateSchema
-from app.db.schemas.paginate_schema import PageMeta
-from app.db.schemas.user_schema import UserGetGroupSchema
-from app.db.schemas.workout_schema import WorkoutCreateSchema
+from db.schemas.base_schema import BaseModelSchema, BaseIdSchema, BaseCreatedAndUpdateSchema
+from db.schemas.paginate_schema import PageMeta
+from db.schemas.user_schema import UserGetGroupSchema
+from db.schemas.workout_schema import WorkoutCreateSchema
 
 
 class GroupMembersAddSchema(BaseModelSchema):

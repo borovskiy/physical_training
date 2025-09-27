@@ -7,8 +7,8 @@ from sqlalchemy import select, delete, update, Row, RowMapping, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
-from app.db.models import UserModel
-from app.repositories.base_repositoriey import BaseRepo
+from db.models import UserModel
+from repositories.base_repositoriey import BaseRepo
 
 
 class UserRepository(BaseRepo):

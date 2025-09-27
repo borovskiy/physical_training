@@ -3,10 +3,10 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 
-from app.db.schemas.auth_schema import TokenResponse
-from app.core.dependencies import user_services
-from app.db.schemas.user_schema import UserRegisterSchema
-from app.services.user_versice import UserServices
+from db.schemas.auth_schema import TokenResponse
+from core.dependencies import user_services
+from db.schemas.user_schema import UserRegisterSchema
+from services.user_versice import UserServices
 
 logger = logging.getLogger(__name__)
 

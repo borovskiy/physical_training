@@ -4,10 +4,10 @@ from sqlalchemy import select, func, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, joinedload
 
-from app.db.models import WorkoutModel, GroupMemberModel, ExerciseModel, GroupModel, UserModel
-from app.db.models.workout_model import WorkoutExerciseModel
-from app.db.schemas.workout_schema import WorkoutExerciseCreateSchema, ExerciseCreateSchema
-from app.repositories.base_repositoriey import BaseRepo
+from db.models import WorkoutModel, GroupMemberModel, ExerciseModel, GroupModel, UserModel
+from db.models.workout_model import WorkoutExerciseModel
+from db.schemas.workout_schema import WorkoutExerciseCreateSchema, ExerciseCreateSchema
+from repositories.base_repositoriey import BaseRepo
 
 
 class WorkoutRepository(BaseRepo):

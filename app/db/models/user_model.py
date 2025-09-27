@@ -7,7 +7,7 @@ from datetime import datetime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, Boolean, Enum, Date
 
-from app.db.base import BaseModel
+from db.base import BaseModel
 
 
 @dataclass(frozen=True)

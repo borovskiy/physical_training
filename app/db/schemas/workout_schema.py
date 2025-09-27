@@ -2,8 +2,8 @@ from typing import List
 
 from pydantic import model_validator
 
-from app.db.schemas.base_schema import BaseIdSchema, BaseModelSchema, BaseCreatedAndUpdateSchema
-from app.db.schemas.paginate_schema import PageMeta
+from db.schemas.base_schema import BaseIdSchema, BaseModelSchema, BaseCreatedAndUpdateSchema
+from db.schemas.paginate_schema import PageMeta
 
 
 class ExerciseCreateSchema(BaseModelSchema):

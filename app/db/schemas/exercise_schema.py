@@ -2,8 +2,8 @@ from typing import Optional, Dict, Any, Sequence
 
 from fastapi import Form
 
-from app.db.schemas.base_schema import BaseModelSchema, BaseIdSchema, BaseCreatedAndUpdateSchema
-from app.db.schemas.paginate_schema import PageMeta
+from db.schemas.base_schema import BaseModelSchema, BaseIdSchema, BaseCreatedAndUpdateSchema
+from db.schemas.paginate_schema import PageMeta
 
 
 class ExerciseSchema(BaseModelSchema, BaseIdSchema, BaseCreatedAndUpdateSchema):

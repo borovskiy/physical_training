@@ -2,7 +2,7 @@ from __future__ import annotations
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String, ForeignKey
 
-from app.db.base import BaseModel
+from db.base import BaseModel
 
 
 class BillingTransactionModel(BaseModel):

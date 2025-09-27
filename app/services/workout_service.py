@@ -3,16 +3,16 @@ from typing import List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import get_limits
-from app.db.models import WorkoutModel
-from app.db.schemas.paginate_schema import PageMeta
-from app.db.schemas.workout_schema import WorkoutCreateSchema, WorkoutExerciseCreateSchema, WorkoutPage
-from app.repositories.exercise_repositories import ExerciseRepository
-from app.repositories.workout_repositories import WorkoutRepository
-from app.services.base_services import BaseServices
-from app.utils.context import get_current_user
-from app.utils.raises import _forbidden, _not_found
-from app.utils.workout_utils import get_list_set_exercises_schema, check_belonging_exercise_on_user
+from core.config import get_limits
+from db.models import WorkoutModel
+from db.schemas.paginate_schema import PageMeta
+from db.schemas.workout_schema import WorkoutCreateSchema, WorkoutExerciseCreateSchema, WorkoutPage
+from repositories.exercise_repositories import ExerciseRepository
+from repositories.workout_repositories import WorkoutRepository
+from services.base_services import BaseServices
+from utils.context import get_current_user
+from utils.raises import _forbidden, _not_found
+from utils.workout_utils import get_list_set_exercises_schema, check_belonging_exercise_on_user
 
 
 class WorkoutServices(BaseServices):

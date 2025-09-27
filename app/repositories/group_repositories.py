@@ -4,8 +4,8 @@ from sqlalchemy import select, func, and_, delete, update, or_, Row, RowMapping
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, joinedload
 
-from app.db.models import GroupModel, GroupMemberModel
-from app.repositories.base_repositoriey import BaseRepo
+from db.models import GroupModel, GroupMemberModel
+from repositories.base_repositoriey import BaseRepo
 
 
 class GroupRepository(BaseRepo):
