@@ -1,13 +1,11 @@
 import random
 from typing import List
-
+from faker import Faker
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from core.config import settings
-from db.models import UserModel, ExerciseModel, WorkoutModel, WorkoutExerciseModel
-from faker import Faker
-
-from services.auth_service import hash_password
+from app.core.config import settings
+from app.db.models import UserModel, ExerciseModel, WorkoutModel, WorkoutExerciseModel
+from app.services.auth_service import hash_password
 
 
 async def create_db_data(count_user: int = 5, count_exercise_for_user: int = 10, count_workout_for_user: int = 3):

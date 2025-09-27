@@ -7,9 +7,9 @@ from fastapi import HTTPException
 from app.services.auth_service import get_password_hash, verify_password, issue_email_verify_token, check_active_user, \
     check_confirmed_user, check_active_and_confirmed_user
 
-from core.config import settings
-from db.models import UserModel
-from db.models.user_model import PlanEnum, TypeTokensEnum
+from app.core.config import settings
+from app.db.models import UserModel
+from app.db.models.user_model import PlanEnum, TypeTokensEnum
 
 
 @pytest.fixture(scope="class")

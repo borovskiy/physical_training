@@ -12,7 +12,7 @@ from app.services.auth_service import issue_email_verify_token, check_active_and
 from app.services.base_services import BaseServices
 from app.utils.context import get_current_user
 from app.utils.raises import _forbidden, _ok, _bad_request, _conflict
-from celery_app import celery_app
+from app.celery_app import celery_app
 
 
 class UserServices(BaseServices):

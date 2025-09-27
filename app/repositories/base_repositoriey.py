@@ -1,9 +1,5 @@
 import logging
 
-from sqlalchemy import select, func
-
-from db.base import BaseModel
-
 
 class BaseRepo:
     def __init__(self):

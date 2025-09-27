@@ -8,8 +8,7 @@ from app.core.dependencies import require_user_attrs, group_services
 from app.db.schemas.group_schema import GroupCreateSchema, GroupFullSchema, GroupMembersCreateSchema, \
     GroupPage, GroupGetSchema, GroupMembersAddSchema, GroupGetOneSchema
 from app.db.schemas.paginate_schema import PaginationGet
-
-from services.group_service import GroupServices
+from app.services.group_service import GroupServices
 
 router = APIRouter()
 

@@ -1,12 +1,11 @@
 from fastapi import FastAPI
 from sqlalchemy.orm import configure_mappers
-
-from app.api.v1 import auth, users, exercises, workout, group
 import uvicorn
 from dotenv import load_dotenv
 
-from core.middleware import CorrelationIdASGIMiddleware
-from logging_conf import setup_logging
+from app.api.v1 import auth, users, exercises, workout, group
+from app.core.middleware import CorrelationIdASGIMiddleware
+from app.logging_conf import setup_logging
 
 setup_logging()
 
@@ -34,4 +33,4 @@ if __name__ == "__main__":
     configure_mappers()
 
     load_dotenv()
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8080, reload=True)
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
