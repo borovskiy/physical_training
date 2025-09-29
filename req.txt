@@ -50,6 +50,8 @@ pluggy==1.6.0
 prometheus_client==0.23.1
 prompt_toolkit==3.0.52
 propcache==0.3.2
+psycopg==3.2.10
+psycopg-binary==3.2.10
 psycopg2-binary==2.9.10
 pyasn1==0.6.1
 pydantic==2.11.7

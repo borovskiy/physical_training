@@ -36,6 +36,7 @@ services:
       POSTGRES_PORT: "5432"
       AMQP_URL: "amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/"
       REDIS_URL: "redis://:${REDIS_PASSWORD}@redis:6379/0"
+      CELERY_RESULT_DB_URL: "db+postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -54,7 +55,7 @@ services:
       - sandy.env
     environment:
       AMQP_URL: "amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/"
-      REDIS_URL: "redis://:${REDIS_PASSWORD}@redis:6379/0"
+      CELERY_RESULT_DB_URL: "db+postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
       FLOWER_PORT: "5555"
     depends_on:
       rabbitmq:

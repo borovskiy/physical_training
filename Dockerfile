@@ -19,4 +19,4 @@ CMD ["celery", "-A", "celery_app:celery_app", "worker", "-l", "info", "-E"]
 
 FROM base AS flower
 EXPOSE 5555
-CMD ["celery", "-A", "celery_app:celery_app", "flower", " --port=5555"]
+CMD ["celery", "-A", "celery_app:celery_app", "flower", "--port=5555", "--broker=${AMQP_URL}", "--result-backend=${CELERY_RESULT_DB_URL}"]

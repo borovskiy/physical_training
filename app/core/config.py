@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     POSTGRES_HOST: str
     POSTGRES_PORT: str
     POSTGRES_URL: Optional[str] = None
+    CELERY_RESULT_DB_URL: Optional[str] = None  # sync для celery/flower (SQL backend)
 
     RABBITMQ_DEFAULT_USER: str
     RABBITMQ_DEFAULT_PASS: str
@@ -60,6 +61,12 @@ class Settings(BaseSettings):
                 "postgresql+asyncpg://"
                 f"{quote_plus(self.POSTGRES_USER)}:"
                 f"{quote_plus(self.POSTGRES_PASSWORD)}"
+                f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{quote_plus(self.POSTGRES_DB)}"
+            )
+        if not self.CELERY_RESULT_DB_URL:
+            self.CELERY_RESULT_DB_URL = (
+                "db+postgresql+psycopg://"
+                f"{quote_plus(self.POSTGRES_USER)}:{quote_plus(self.POSTGRES_PASSWORD)}"
                 f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{quote_plus(self.POSTGRES_DB)}"
             )
         return self

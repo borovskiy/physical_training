@@ -8,7 +8,7 @@ load_dotenv()
 celery_app = Celery(
     "physical_training",
     broker=settings.AMQP_URL,
-    backend=settings.REDIS_URL,
+    backend=settings.CELERY_RESULT_DB_URL,
     include=[
         "tasks.email_tasks",
     ],
@@ -21,6 +21,7 @@ celery_app.conf.update(
     timezone=settings.TIMEZONE,
     enable_utc=True,
     task_default_queue="default",
+    database_table_names={"task": "myapp_taskmeta", "group": "myapp_groupmeta"},
     task_queues=(
         Queue("default", Exchange("default"), routing_key="default.#"),
         Queue("test_queues", Exchange("test"), routing_key="test.#"),
