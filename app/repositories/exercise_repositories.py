@@ -42,9 +42,9 @@ class ExerciseRepository(BaseRepo):
         )
         res_exercise = await self.session.execute(stmt_exercise)
         exercises = res_exercise.scalars().all()
-        self.log.info("exercises", exercises)
+        self.log.info(f"exercises {exercises}")
         total = await self.get_count_exercise_user(user_id)
-        self.log.info("count all exercises", total)
+        self.log.info(f"count all exercises {total}")
         return exercises, total
 
     async def get_count_exercise_user(self, user_id: int) -> int:
@@ -145,4 +145,6 @@ class ExerciseRepository(BaseRepo):
                             .where(self.model_workout_exercise.id == assoc.id) \
                             .values(position=new_pos)
                         await self.session.execute(upd)
+            del_exercise = delete(self.model).where(self.model.id == exercise_id)
+            await self.session.execute(del_exercise)
         await self.session.commit()

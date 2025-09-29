@@ -46,11 +46,10 @@ class ExerciseFullSchema(BaseIdSchema, BaseCreatedAndUpdateSchema, BaseModelSche
     title: str
     type: str
     media_url: str | None
-    rest_sec: int
     description: str
 
+    rest_sec: int | None
     count_sets: int | None
-
     repetitions: int | None
     time_work: int | None
 

@@ -5,8 +5,10 @@ from fastapi import APIRouter, Depends, File, UploadFile
 from starlette import status
 
 from core.dependencies import exercise_services, require_user_attrs
-from db.schemas.exercise_schema import CreateExerciseSchema, ExerciseSchema, ExercisePage, UpdateExerciseSchema
+from db.schemas.exercise_schema import CreateExerciseSchema, ExercisePage, UpdateExerciseSchema, \
+    parse_create_exercise_form
 from db.schemas.paginate_schema import PaginationGet
+from db.schemas.workout_schema import ExerciseFullSchema
 from services.exercise_service import ExerciseServices
 
 logger = logging.getLogger(__name__)
@@ -14,11 +16,11 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("/create_exercise", response_model=ExerciseSchema, status_code=status.HTTP_201_CREATED,
+@router.post("/create_exercise", response_model=ExerciseFullSchema, status_code=status.HTTP_201_CREATED,
              dependencies=[Depends(require_user_attrs())])
 async def create_exercise(
         exercise_serv: Annotated[ExerciseServices, Depends(exercise_services)],
-        exercise_schema: CreateExerciseSchema = Depends(CreateExerciseSchema.as_form),
+        exercise_schema: CreateExerciseSchema = Depends(parse_create_exercise_form),
         file: UploadFile = File(),
 ):
     logger.info("Try get exercise service")
@@ -35,7 +37,7 @@ async def get_exercises(
     return await exercise_serv.get_exercises(pagination.limit, pagination.start)
 
 
-@router.get("/get_exercise/{exercise_id}", response_model=ExerciseSchema, status_code=status.HTTP_200_OK,
+@router.get("/get_exercise/{exercise_id}", response_model=ExerciseFullSchema, status_code=status.HTTP_200_OK,
             dependencies=[Depends(require_user_attrs())])
 async def create_exercise(
         exercise_id: int,
@@ -45,7 +47,7 @@ async def create_exercise(
     return await exercise_serv.get_exercise(exercise_id)
 
 
-@router.put("/update_exercise_data/{exercise_id}", response_model=ExerciseSchema, status_code=status.HTTP_200_OK,
+@router.put("/update_exercise_data/{exercise_id}", response_model=ExerciseFullSchema, status_code=status.HTTP_200_OK,
             dependencies=[Depends(require_user_attrs())])
 async def update_exercise_data(
         exercise_id: int,
@@ -57,7 +59,7 @@ async def update_exercise_data(
     return result
 
 
-@router.put("/update_exercise_file/{exercise_id}", response_model=ExerciseSchema, status_code=status.HTTP_200_OK,
+@router.put("/update_exercise_file/{exercise_id}", response_model=ExerciseFullSchema, status_code=status.HTTP_200_OK,
             dependencies=[Depends(require_user_attrs())])
 async def update_exercise_file(
         exercise_id: int,
@@ -69,7 +71,7 @@ async def update_exercise_file(
     return result
 
 
-@router.delete("/{exercise_id}", response_model=ExerciseSchema, status_code=status.HTTP_200_OK,
+@router.delete("/{exercise_id}", response_model=ExerciseFullSchema, status_code=status.HTTP_200_OK,
                dependencies=[Depends(require_user_attrs())])
 async def remove_exercises(
         exercise_id: int,
