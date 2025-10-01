@@ -3,11 +3,13 @@ from __future__ import annotations
 from typing import List, Sequence
 
 from fastapi import HTTPException
-from sqlalchemy import select, delete, update, Row, RowMapping, func
+from sqlalchemy import select, delete, update, func, insert
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload, joinedload
 from starlette import status
 
 from db.models import UserModel
+from db.models.jwt_token_model import JWTToken
 from repositories.base_repositoriey import BaseRepo
 
 
@@ -16,24 +18,25 @@ class UserRepository(BaseRepo):
         super().__init__()
         self.session = session
         self.model = UserModel
+        self.token_model = JWTToken
 
     async def add_user(self, data: dict) -> UserModel:
         self.log.info("add_user %s ", data)
-        obj = self.model(**data)  # создаём объект
-        self.session.add(obj)  # добавляем в сессию
-        await self.session.commit()  # фиксируем
-        await self.session.refresh(obj)  # подтягиваем id и т.п. сгенерированные БД
+        obj = self.model(**data)
+        self.session.add(obj)
+        await self.session.commit()
+        await self.session.refresh(obj)
         return obj
 
     async def find_user_email(self, mail: str) -> UserModel | None:
         self.log.info("find_user_email %s ", mail)
-        stmt = select(self.model).where(self.model.email == mail)
+        stmt = select(self.model).where(self.model.email == mail).options(joinedload(self.model.token))
         result = await self.session.execute(stmt)
         return result.scalars().first()
 
     async def find_user_id(self, id_user: int) -> UserModel | None:
         self.log.info("find_user_id %s ", id_user)
-        stmt = select(self.model).where(self.model.id == id_user)
+        stmt = select(self.model).where(self.model.id == id_user).options(joinedload(self.model.token))
         result = await self.session.execute(stmt)
         return result.scalars().first()
 
@@ -73,7 +76,7 @@ class UserRepository(BaseRepo):
 
     async def get_user_by_id(self, user_id: int | str) -> UserModel | None:
         self.log.info("get_user_by_id %s", user_id)
-        stmt = select(self.model).where(self.model.id == int(user_id))
+        stmt = select(self.model).where(self.model.id == int(user_id)).options(joinedload(self.model.token))
         res = await self.session.execute(stmt)
         return res.scalars().first()
 
@@ -91,3 +94,17 @@ class UserRepository(BaseRepo):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
         await self.session.commit()
         return await self.session.get(self.model, user_id)
+
+    async def add_token_user(self, token: str, user_id: int) -> str | None:
+        self.log.info("add_token_user by id %s ", user_id)
+        obj = JWTToken(token=token, user_id=user_id)
+        self.session.add(obj)
+        await self.session.commit()
+        await self.session.refresh(obj)
+        return obj.token
+
+    async def remove_token_user(self, user_id: int) -> str | None:
+        self.log.info("remove_token_user by id %s ", user_id)
+        stmt = delete(self.token_model).where(self.token_model.user_id == user_id)
+        await self.session.execute(stmt)
+        await self.session.commit()

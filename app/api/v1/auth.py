@@ -4,9 +4,10 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query
 
 from db.schemas.auth_schema import TokenResponse
-from core.dependencies import user_services
+from core.dependencies import user_services, require_user_attrs
 from db.schemas.user_schema import UserRegisterSchema
 from services.user_versice import UserServices
+from utils.context import get_current_user
 
 logger = logging.getLogger(__name__)
 
@@ -48,5 +49,13 @@ async def login(
     - returns a "dummy" token
     """
     logger.info("Try get user service")
-    token = await user_serv.login_user(data_user)
+    token = await user_serv.login_user(data_user.email, data_user.password_hash)
     return TokenResponse(access_token=token)
+
+
+@router.post("/refresh_token", response_model=TokenResponse, dependencies=[Depends(require_user_attrs())])
+async def refresh_token(
+        user_serv: Annotated[UserServices, Depends(user_services)],
+):
+    logger.info("Try get user service")
+    return await user_serv.refresh_token()

@@ -2,10 +2,11 @@ from typing import Annotated, Optional
 
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-
+from datetime import datetime, timedelta, timezone
 from core.config import settings
 from core.s3_cloud_connector import S3CloudConnector
 from db.models import UserModel
+from db.schemas.user_schema import UserAdminGetModelSchema
 from services.auth_service import get_bearer_token, verify_token, check_active_and_confirmed_user
 from services.exercise_service import ExerciseServices
 from services.group_service import GroupServices
@@ -48,7 +49,8 @@ def get_s3_connector() -> S3CloudConnector:
 def require_user_attrs(
         is_admin: Optional[bool] = False,
 ):
-    async def dep(current_user: Annotated[UserModel, Depends(get_current_user_from_token)]) -> UserModel:
+    async def dep(current_user: Annotated[
+        UserAdminGetModelSchema, Depends(get_current_user_from_token)]) -> UserAdminGetModelSchema:
         if is_admin:
             if bool(current_user.is_admin):
                 return current_user
@@ -63,13 +65,20 @@ def require_user_attrs(
 async def get_current_user_from_token(
         raw_token: str = Depends(get_bearer_token),
         user_serv=Depends(user_services),
-) -> UserModel:
+) -> UserAdminGetModelSchema:
     payload = verify_token(raw_token)
     user = await user_serv.repo.get_user_by_id(payload.user_id)
     if not user:
         raise _unauthorized("User not found")
-
+    if user.token is None:
+        raise _unauthorized("Token is not valid")
+    if raw_token != user.token.token:
+        raise _unauthorized("Token is not valid")
+    if payload.token_limit_verify - datetime.now(timezone.utc).timestamp() < 0:
+        await user_serv.repo.remove_token_user(payload.user_id)
+        raise _unauthorized("Token timed out")
     if not await check_active_and_confirmed_user(user):
         raise _unauthorized("User is inactive or not confirmed")
-    set_current_user(user)
-    return user
+    user_model = UserAdminGetModelSchema.model_validate(user)
+    set_current_user(user_model)
+    return user_model

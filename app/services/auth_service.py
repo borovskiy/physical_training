@@ -25,13 +25,13 @@ security_bearer = HTTPBearer(auto_error=False)
 logger = logging.getLogger(__name__)
 
 
-async def issue_email_verify_token(user: UserModel, type_token: TypeTokensEnum = TypeTokensEnum.email_verify) -> str:
+async def issue_email_verify_token(user_id: int, type_token: TypeTokensEnum = TypeTokensEnum.email_verify) -> str:
     logger.info("Issue email verify token")
     now = datetime.now(timezone.utc)
     payload = PayloadToken(
         token_limit_verify=int((now + timedelta(minutes=settings.VERIFY_TOKEN_TTL_MIN)).timestamp()),
         time_now=int(now.timestamp()),
-        user_id=user.id,
+        user_id=user_id,
         type=type_token.name)
 
     return jwt.encode(payload.model_dump(), settings.JWT_SECRET, algorithm=settings.JWT_ALG)

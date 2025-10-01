@@ -46,7 +46,7 @@ class TestAuthClass:
     @pytest.mark.asyncio
     async def test_issue_email_verify_token(self, monkeypatch, user_fixture):
         t0 = datetime.now(timezone.utc)
-        token = await issue_email_verify_token(user_fixture, TypeTokensEnum.access)
+        token = await issue_email_verify_token(user_fixture.id, TypeTokensEnum.access)
 
         payload = jwt.decode(
             token,

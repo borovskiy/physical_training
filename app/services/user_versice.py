@@ -1,6 +1,9 @@
+from typing import Any, Coroutine
+
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from db.schemas.auth_schema import TokenResponse
 from repositories.user_repository import UserRepository
 from core.config import settings
 from db.models import UserModel
@@ -27,7 +30,7 @@ class UserServices(BaseServices):
             user.password_hash = await hash_password(user.password_hash)
             user_dict = user.model_dump()
             user = await self.repo.add_user(user_dict)
-            token = await issue_email_verify_token(user, TypeTokensEnum.email_verify)
+            token = await issue_email_verify_token(user.id, TypeTokensEnum.email_verify)
             self.log.info("Create token for registration %s", token)
             data = QeueSignupUserSchema(
                 base_url=settings.APP_BASE_URL,
@@ -52,19 +55,22 @@ class UserServices(BaseServices):
             raise HTTPException(status_code=400, detail="Invalid or expired token")
         await self.repo.update_is_confirmed_user(token_data.user_id)
 
-    async def login_user(self, user: UserRegisterSchema) -> str | None:
-        self.log.info("Try login user %s ", user)
-        user_db = await self.repo.find_user_email(user.email)
-        self.log.info("Find user email %s ", user)
+    async def login_user(self, user_email: str, user_password_hash: str) -> str | None:
+        self.log.info("Try login user %s ", user_email)
+        user_db = await self.repo.find_user_email(user_email)
         if user_db is None:
             self.log.error("User not found")
             raise HTTPException(status_code=404, detail="User not found")
-        if await verify_password(user.password_hash, user_db.password_hash) is False:
+        self.log.info("Find user email %s ", user_email)
+        if not await verify_password(user_password_hash, user_db.password_hash):
             if user_db is None:
                 self.log.error("Wrong password")
                 raise _forbidden("Wrong password")
         if await check_active_and_confirmed_user(user_db):
-            return await issue_email_verify_token(user_db, TypeTokensEnum.access)
+            if user_db.token is not None:
+                return user_db.token.token
+            token: str = await issue_email_verify_token(user_db.id, TypeTokensEnum.access)
+            return await self.repo.add_token_user(token, user_db.id)
         raise _unauthorized("User is not active")
 
     async def update_user_profile(self, user_schema: UserPostModelUpdateSchema):
@@ -102,3 +108,9 @@ class UserServices(BaseServices):
         else:
             self.log.error("User not remove")
             return _bad_request("User not remove")
+
+    async def refresh_token(self) -> TokenResponse:
+        current_user = get_current_user()
+        await self.repo.remove_token_user(current_user.id)
+        token: str = await issue_email_verify_token(current_user.id, TypeTokensEnum.access)
+        return TokenResponse(access_token=await self.repo.add_token_user(token, current_user.id))
