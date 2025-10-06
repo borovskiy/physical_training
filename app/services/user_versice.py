@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Any, Coroutine
 
 from fastapi import HTTPException
@@ -10,11 +11,11 @@ from db.models import UserModel
 from db.models.user_model import TypeTokensEnum
 from db.schemas.qeue_schemas import QeueSignupUserSchema
 from db.schemas.user_schema import UserRegisterSchema, UserPostModelUpdateSchema, UserAdminPutModelSchema
-from services.auth_service import issue_email_verify_token, check_active_and_confirmed_user, \
-    _unauthorized, verify_password, verify_token, hash_password
+from services.auth_service import AuthServ
+
 from services.base_services import BaseServices
 from utils.context import get_current_user
-from utils.raises import _forbidden, _ok, _bad_request, _conflict
+from utils.raises import _forbidden, _ok, _bad_request, _conflict, _unauthorized
 from celery_app import celery_app
 
 
@@ -27,10 +28,10 @@ class UserServices(BaseServices):
         self.log.info("create_user")
         find_user = await self.repo.find_user_email(user.email)
         if find_user is None:
-            user.password_hash = await hash_password(user.password_hash)
+            user.password_hash = await AuthServ.hash_password(user.password_hash)
             user_dict = user.model_dump()
             user = await self.repo.add_user(user_dict)
-            token = await issue_email_verify_token(user.id, TypeTokensEnum.email_verify)
+            token = await AuthServ.issue_email_verify_token(user.id, TypeTokensEnum.email_verify)
             self.log.info("Create token for registration %s", token)
             data = QeueSignupUserSchema(
                 base_url=settings.APP_BASE_URL,
@@ -46,7 +47,7 @@ class UserServices(BaseServices):
 
     async def confirm_email(self, token: str):
         try:
-            token_data = verify_token(token)
+            token_data = AuthServ.verify_token(token)
             if token_data.type != TypeTokensEnum.email_verify.name:
                 self.log.error("Wrong token type")
                 raise ValueError("Wrong token type")
@@ -62,15 +63,16 @@ class UserServices(BaseServices):
             self.log.error("User not found")
             raise HTTPException(status_code=404, detail="User not found")
         self.log.info("Find user email %s ", user_email)
-        if not await verify_password(user_password_hash, user_db.password_hash):
-            if user_db is None:
-                self.log.error("Wrong password")
-                raise _forbidden("Wrong password")
-        if await check_active_and_confirmed_user(user_db):
+        if not await AuthServ.verify_password(user_password_hash, user_db.password_hash):
+            self.log.error("Wrong password")
+            raise _forbidden("Wrong password")
+        if await AuthServ.check_active_and_confirmed_user(user_db):
             if user_db.token is not None:
+                payload = AuthServ.verify_token(user_db.token.token)
+                if payload.token_limit_verify - datetime.now(timezone.utc).timestamp() < 0:
+                    return await self.repo.update_token_user(
+                        await AuthServ.issue_email_verify_token(user_db.id, TypeTokensEnum.access), user_db.id)
                 return user_db.token.token
-            token: str = await issue_email_verify_token(user_db.id, TypeTokensEnum.access)
-            return await self.repo.add_token_user(token, user_db.id)
         raise _unauthorized("User is not active")
 
     async def update_user_profile(self, user_schema: UserPostModelUpdateSchema):
@@ -112,5 +114,5 @@ class UserServices(BaseServices):
     async def refresh_token(self) -> TokenResponse:
         current_user = get_current_user()
         await self.repo.remove_token_user(current_user.id)
-        token: str = await issue_email_verify_token(current_user.id, TypeTokensEnum.access)
+        token: str = await AuthServ.issue_email_verify_token(current_user.id, TypeTokensEnum.access)
         return TokenResponse(access_token=await self.repo.add_token_user(token, current_user.id))

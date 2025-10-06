@@ -7,7 +7,7 @@ from core.config import settings
 from core.s3_cloud_connector import S3CloudConnector
 from db.models import UserModel
 from db.schemas.user_schema import UserAdminGetModelSchema
-from services.auth_service import get_bearer_token, verify_token, check_active_and_confirmed_user
+from services.auth_service import AuthServ
 from services.exercise_service import ExerciseServices
 from services.group_service import GroupServices
 from services.user_versice import UserServices
@@ -63,10 +63,10 @@ def require_user_attrs(
 
 
 async def get_current_user_from_token(
-        raw_token: str = Depends(get_bearer_token),
+        raw_token: str = Depends(AuthServ.get_bearer_token),
         user_serv=Depends(user_services),
 ) -> UserAdminGetModelSchema:
-    payload = verify_token(raw_token)
+    payload = AuthServ.verify_token(raw_token)
     user = await user_serv.repo.get_user_by_id(payload.user_id)
     if not user:
         raise _unauthorized("User not found")
@@ -77,7 +77,7 @@ async def get_current_user_from_token(
     if payload.token_limit_verify - datetime.now(timezone.utc).timestamp() < 0:
         await user_serv.repo.remove_token_user(payload.user_id)
         raise _unauthorized("Token timed out")
-    if not await check_active_and_confirmed_user(user):
+    if not await AuthServ.check_active_and_confirmed_user(user):
         raise _unauthorized("User is inactive or not confirmed")
     user_model = UserAdminGetModelSchema.model_validate(user)
     set_current_user(user_model)

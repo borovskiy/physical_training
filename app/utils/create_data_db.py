@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from core.config import settings
 from db.models import UserModel, ExerciseModel, WorkoutModel, WorkoutExerciseModel
-from services.auth_service import hash_password
+from services.auth_service import AuthServ
 
 
 async def create_db_data(count_user: int = 5, count_exercise_for_user: int = 10, count_workout_for_user: int = 3):
@@ -26,7 +26,7 @@ async def create_db_data(count_user: int = 5, count_exercise_for_user: int = 10,
                     is_confirmed=True,
                     is_admin=(user_number == 0),
                 )
-                user.password_hash = await hash_password(user.email)
+                user.password_hash = await AuthServ.hash_password(user.email)
                 session.add(user)
                 await session.flush()
                 list_users.append(user)

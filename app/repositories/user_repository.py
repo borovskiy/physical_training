@@ -103,6 +103,13 @@ class UserRepository(BaseRepo):
         await self.session.refresh(obj)
         return obj.token
 
+    async def update_token_user(self, token: str, user_id: int) -> str | None:
+        self.log.info("update_token_user by id %s ", user_id)
+        stmt = update(self.token_model).where(self.token_model.user_id == user_id).values(token=token)
+        await self.session.execute(stmt)
+        await self.session.commit()
+        return token
+
     async def remove_token_user(self, user_id: int) -> str | None:
         self.log.info("remove_token_user by id %s ", user_id)
         stmt = delete(self.token_model).where(self.token_model.user_id == user_id)
