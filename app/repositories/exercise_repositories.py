@@ -30,7 +30,7 @@ class ExerciseRepository(BaseRepo):
         return exercises, total
 
     async def get_by_id(self, user_id: int, exercise_id: int | str) -> ExerciseModel | None:
-        self.log.info("get_by_id user_id %s exercise_id", user_id, exercise_id)
+        self.log.info("get_by_id user_id %s exercise_id %s", user_id, exercise_id)
         stmt_exercise = (
             select(self.model)
             .where(

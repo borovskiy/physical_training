@@ -1,6 +1,7 @@
 from typing import Optional, Sequence
 
 from fastapi import Form, HTTPException
+from pydantic import PrivateAttr
 
 from db.schemas.base_schema import BaseModelSchema, BaseIdSchema, BaseCreatedAndUpdateSchema
 from db.schemas.paginate_schema import PageMeta
@@ -18,7 +19,7 @@ class CreateExerciseSchema(UpdateExerciseSchema):
     repetitions: Optional[int] = None
     count_sets: Optional[int] = None
     rest_sec: Optional[int]
-    _user_id: int | None = None
+    _user_id: int | None = PrivateAttr(default=None)  # приватное поле, не видно снаружи
 
     def model_dump(self, **kwargs):
         data = super().model_dump(**kwargs)
@@ -44,7 +45,7 @@ def parse_create_exercise_form(
         repetitions: Optional[int] = Form(None),
         count_sets: Optional[int] = Form(None),
         rest_sec: Optional[int] = Form(None),
-) -> UpdateExerciseSchema:
+) -> CreateExerciseSchema:
     tw = _to_int_or_none(time_work, "time_work")
     rep = _to_int_or_none(repetitions, "repetitions")
     cs = _to_int_or_none(count_sets, "count_sets")
@@ -65,12 +66,12 @@ def parse_create_exercise_form(
             detail="Select one mode: time_work only OR (repetitions + count_sets)."
         )
 
-    return UpdateExerciseSchema(
+    return CreateExerciseSchema(
         title=title, type=type, description=description,
         time_work=tw, repetitions=rep, count_sets=cs, rest_sec=rs
     )
 
 
 class ExercisePage(BaseModelSchema):
-    exercises: Sequence[ExerciseFullSchema]
     meta: PageMeta
+    exercises: Sequence[ExerciseFullSchema]

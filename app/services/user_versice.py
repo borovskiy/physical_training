@@ -67,6 +67,8 @@ class UserServices(BaseServices):
                     return await self.repo.update_token_user(
                         await AuthServ.issue_email_verify_token(user_db.id, TypeTokensEnum.access), user_db.id)
                 return user_db.token.token
+            return await self.repo.add_token_user(
+                await AuthServ.issue_email_verify_token(user_db.id, TypeTokensEnum.access), user_db.id)
         raise _unauthorized("User is not active")
 
     async def update_user_profile(self, user_schema: UserPostModelUpdateSchema):

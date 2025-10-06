@@ -46,7 +46,7 @@ class BaseRepo(ABC):
         try:
             self.log.info("execute_session_get_one")
             result = await self.session.execute(stmt)
-            return result.scalars().one()
+            return result.scalars().one_or_none()
         except Exception as ex:
             self.log.error("error execute stmt %s", stmt)
             self.log.error("Exception %s", ex)

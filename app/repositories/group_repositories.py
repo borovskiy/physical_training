@@ -65,15 +65,17 @@ class GroupRepository(BaseRepo):
     async def get_group_by_id_with_full_relation(self, id_group: int, user_id: int) -> GroupModel:
         self.log.info("get_group_by_id_with_full_relation")
         stmt = (
-            select(self.model).options(joinedload(self.model.members)).options(
-                joinedload(self.model.workout))
+            select(self.model)
+            .options(joinedload(self.model.members))
+            .options(joinedload(self.model.workout))
+            .options(joinedload(self.model.user))
             .where(
                 and_(
                     self.model.id == id_group,
                     self.model.user_id == user_id
                 ))
         )
-        return await self.session.scalar(stmt)
+        return await self.execute_session_get_first(stmt)
 
     async def get_groups_user(self, user_id: int, limit: int, start: int) -> tuple[Sequence[GroupModel], Any]:
         self.log.info("get_groups_user")

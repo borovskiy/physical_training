@@ -69,7 +69,7 @@ async def update_workout(
     return await workout_serv.update_workout(workout_id, workout_schema)
 
 
-@router.delete("/{workout_id}", response_model=WorkoutExerciseCreateSchema, status_code=status.HTTP_200_OK,
+@router.delete("/{workout_id}", status_code=status.HTTP_200_OK,
                dependencies=[Depends(require_user_attrs())])
 async def remove_workout(
         workout_id: int,

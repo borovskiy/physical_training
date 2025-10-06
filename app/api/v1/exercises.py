@@ -45,7 +45,7 @@ async def get_exercises(
 
 @router.get("/get_exercise/{exercise_id}", response_model=ExerciseFullSchema, status_code=status.HTTP_200_OK,
             dependencies=[Depends(require_user_attrs())])
-async def create_exercise(
+async def get_exercise_id(
         exercise_id: int,
         exercise_serv: Annotated[ExerciseServices, Depends(exercise_services)],
 ):
@@ -58,10 +58,10 @@ async def create_exercise(
 
 @router.put("/update_exercise_data/{exercise_id}", response_model=ExerciseFullSchema, status_code=status.HTTP_200_OK,
             dependencies=[Depends(require_user_attrs())])
-async def update_exercise_data(
+async def update_exercise_data_by_id(
         exercise_id: int,
         exercise_serv: Annotated[ExerciseServices, Depends(exercise_services)],
-        schema: UpdateExerciseSchema,
+        schema: CreateExerciseSchema,
 ):
     """
     update data of the exercise in DB by id

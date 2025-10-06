@@ -43,7 +43,7 @@ async def get_group_id(
 
 
 @router.post("/create_group", response_model=GroupGetOneSchema, status_code=status.HTTP_201_CREATED,
-             )
+             dependencies=[Depends(require_user_attrs())])
 async def create_group(
         group_serv: Annotated[GroupServices, Depends(group_services)],
         group_schema: GroupCreateSchema,
