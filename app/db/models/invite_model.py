@@ -10,9 +10,9 @@ from db.base import BaseModel
 class InviteModel(BaseModel):
     __tablename__ = "invites"
 
-    email: Mapped[str] = mapped_column(String(255))  # кого приглашаем
+    email: Mapped[str] = mapped_column(String(255))
     token: Mapped[str] = mapped_column(String(255), unique=True)  # токен (JWT/UUID)
-    invited_by: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))  # кто пригласил
-    group_id: Mapped[Optional[int]] = mapped_column(ForeignKey("groups.id"))  # если сразу в группу
-    expires_at: Mapped[datetime] = mapped_column(DateTime)  # срок действия
-    status: Mapped[str] = mapped_column(String(50), default="pending")  # pending/accepted/expired
+    invited_by: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    group_id: Mapped[Optional[int]] = mapped_column(ForeignKey("groups.id"))
+    expires_at: Mapped[datetime] = mapped_column(DateTime)
+    status: Mapped[str] = mapped_column(String(50), default="pending")

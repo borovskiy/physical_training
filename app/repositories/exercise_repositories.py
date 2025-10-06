@@ -9,27 +9,9 @@ from repositories.base_repositoriey import BaseRepo
 
 class ExerciseRepository(BaseRepo):
     def __init__(self, session: AsyncSession):
-        super().__init__()
-        self.session = session
+        super().__init__(session)
         self.model = ExerciseModel
         self.model_workout_exercise = WorkoutExerciseModel
-
-    async def add_exercise(self, data: dict, user_id: int) -> ExerciseModel:
-        self.log.info("add_exercise data %s user_id %s", data, user_id)
-        exercise_obj = self.model(**data)
-        exercise_obj.user_id = user_id
-        self.session.add(exercise_obj)
-        self.log.info("New workout %s", exercise_obj)
-        await self.session.commit()
-        await self.session.refresh(exercise_obj)
-        return exercise_obj
-
-    async def update_link_exercise(self, exercise_id: int, exercise_link: str):
-        self.log.info("update_link_exercise id %s, link %s", exercise_id, exercise_link)
-        stmt = update(self.model).where(self.model.id == exercise_id).values(media_url=exercise_link)
-        await self.session.execute(stmt)
-        await self.session.commit()
-        return await self.session.get(ExerciseModel, exercise_id)
 
     async def get_all_exercise_user(self, user_id: int, limit: int, start: int) -> tuple[Sequence[ExerciseModel], Any]:
         self.log.info("get_all_exercise_user %s limit %s start %s", user_id, limit, start)
@@ -47,13 +29,6 @@ class ExerciseRepository(BaseRepo):
         self.log.info(f"count all exercises {total}")
         return exercises, total
 
-    async def get_count_exercise_user(self, user_id: int) -> int:
-        self.log.info("get_count_exercise_user %s", user_id)
-        stmt_count_exercise = select(func.count()).select_from(
-            select(self.model.id).where(self.model.user_id == user_id).subquery()
-        )
-        return (await self.session.execute(stmt_count_exercise)).scalar_one()
-
     async def get_by_id(self, user_id: int, exercise_id: int | str) -> ExerciseModel | None:
         self.log.info("get_by_id user_id %s exercise_id", user_id, exercise_id)
         stmt_exercise = (
@@ -66,35 +41,39 @@ class ExerciseRepository(BaseRepo):
             )
 
         )
-        res = await self.session.execute(stmt_exercise)
-        return res.scalars().first()
+        return await self.execute_session_get_first(stmt_exercise)
+
+    async def get_count_exercise_user(self, user_id: int) -> int:
+        self.log.info("get_count_exercise_user %s", user_id)
+        stmt_count_exercise = select(func.count()).select_from(
+            select(self.model.id).where(self.model.user_id == user_id).subquery()
+        )
+        return await self.execute_session_get_one(stmt_count_exercise)
 
     async def update_exercise(self, data: dict, user_id: int, exercise_id: int) -> ExerciseModel:
         self.log.info("update_exercise by data %s, user_id %s, exercise_id %s", data, user_id, exercise_id)
-        stmt = (update(self.model).where(
-            and_(
-                self.model.id == exercise_id,
-                self.model.user_id == user_id
-            )
-        ).values(**data).returning(self.model)
+        stmt = (
+            update(self.model).where(
+                and_(
+                    self.model.id == exercise_id,
+                    self.model.user_id == user_id
                 )
-        result = await self.session.execute(stmt)
-        await self.session.commit()
-        return result.scalar_one_or_none()
+            ).values(**data).returning(self.model)
+        )
+        await self.execute_session_and_commit(stmt)
+        return await self.get_by_id(user_id, exercise_id)
 
     async def find_count_self_exercise(self, user_id: int, list_id_exercise: List[int]) -> int:
         self.log.info("find_count_self_exercise list id exercise %s, user id %s", list_id_exercise, user_id)
         stmt = (
             select(func.count())
-            .select_from(self.model)  # или Workout
+            .select_from(self.model)
             .where(
-                self.model.user_id == user_id,  # для Workout -> Workout.user_id
+                self.model.user_id == user_id,
                 self.model.id.in_(list_id_exercise),
             )
         )
-        cnt = await self.session.scalar(stmt)
-        self.log.info("count all exercise user %s", cnt)
-        return cnt
+        return await self.execute_session_get_one(stmt)
 
     async def remove_exercise_id(self, exercise_id: int, start_index: int = 1) -> None:
         self.log.info("remove_exercise_id %s", exercise_id)
@@ -148,3 +127,10 @@ class ExerciseRepository(BaseRepo):
             del_exercise = delete(self.model).where(self.model.id == exercise_id)
             await self.session.execute(del_exercise)
         await self.session.commit()
+        return None
+
+    async def update_link_exercise(self, exercise_id: int, exercise_link: str):
+        self.log.info("update_link_exercise id %s, link %s", exercise_id, exercise_link)
+        stmt = update(self.model).where(self.model.id == exercise_id).values(media_url=exercise_link)
+        await self.execute_session_and_commit(stmt)
+        return await self.session.get(self.model, exercise_id)

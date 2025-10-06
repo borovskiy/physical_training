@@ -56,4 +56,4 @@ class UserModel(BaseModel):
     groups: Mapped[List["GroupModel"]] = relationship(secondary="association_group_members", back_populates="members",
                                                       overlaps="groups_members")
     groups_members: Mapped[List["GroupMemberModel"]] = relationship(back_populates="user", overlaps="groups")
-    token: Mapped["JWTToken"] = relationship(back_populates="user")
+    token: Mapped["JWTTokenModel"] = relationship(back_populates="user")

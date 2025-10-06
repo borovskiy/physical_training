@@ -28,25 +28,24 @@ class GroupServices(BaseServices):
         current_user = get_current_user()
         if await self.repo.get_groups_user_count(current_user.id) >= get_limits(current_user.plan).groups_limit:
             raise _forbidden("You have reached the limit for creating groups.")
-        return await self.repo.add_group(group_schema.model_dump(), current_user.id)
+        group_schema._user_id = current_user.id
+        return await self.repo.create_one_obj_model(group_schema.model_dump())
 
     async def rename_group(self, group_id: int, group_name: str) -> GroupModel:
         self.log.info("rename group")
         current_user = get_current_user()
-        group = await self.repo.get_group_by_id(group_id, current_user.id)
-        if group is None:
+        if not await self.repo.check_group_exists(group_id, current_user.id):
             raise _not_found("Not found group for you")
         await self.repo.rename_group(group_name, group_id)
-        return await self.repo.get_group_by_id(group_id, current_user.id)
+        return await self.repo.get_group_user_by_id(group_id, current_user.id)
 
     async def delete_group(self, group_id: int):
         self.log.info("delete group")
         current_user = get_current_user()
-        group = await self.repo.get_group_by_id(group_id, current_user.id)
-        if group is None:
+        if not await self.repo.check_group_exists(group_id, current_user.id):
             raise _forbidden("Not found group for you")
         await self.repo.delete_group(group_id, current_user.id)
-        return group
+        return True
 
     async def add_members_in_group(self, id_group: int, members_schema: List[GroupMembersAddSchema]):
         self.log.info("add members in group")
@@ -87,8 +86,7 @@ class GroupServices(BaseServices):
     async def delete_members(self, members: List[GroupMembersAddSchema], group_id: int) -> GroupModel:
         self.log.info("delete members")
         current_user = get_current_user()
-        group = await self.repo.get_group_by_id(group_id, current_user.id)
-        if group is None:
+        if not await self.repo.check_group_exists(group_id, current_user.id):
             raise _forbidden("Not found group")
         ids_members = [member.user_id for member in members]
         await self.repo.remove_member_group_id(ids_members, group_id)
@@ -97,19 +95,17 @@ class GroupServices(BaseServices):
     async def delete_workout_from_group(self, group_id: int):
         self.log.info("delete workout from group")
         current_user = get_current_user()
-        group = await self.repo.get_group_by_id(group_id, current_user.id)
-        if group is None:
+        if not await self.repo.check_group_exists(group_id, current_user.id):
             raise _forbidden("Not found group")
         return await self.repo.remove_workout_from_group(group_id)
 
-    async def add_workout_in_group(self, id_group: int, id_workout: int):
+    async def add_workout_in_group(self, group_id: int, id_workout: int):
         self.log.info("add workout in group")
         current_user = get_current_user()
-        workout = await self.workout_repo.get_workout_with_user(id_workout, current_user.id)
+        workout = await self.workout_repo.get_workout_for_user(id_workout, current_user.id)
         if workout is None:
             raise _forbidden("Not found workout for you")
-        group = await self.repo.get_group_by_id(id_group, current_user.id)
-        if group is None:
-            raise _forbidden("Not found group for you")
+        if not await self.repo.check_group_exists(group_id, current_user.id):
+            raise _forbidden("Not found group")
 
-        return await self.repo.update_workout_in_group(id_group, id_workout, current_user.id)
+        return await self.repo.update_workout_in_group(group_id, id_workout, current_user.id)

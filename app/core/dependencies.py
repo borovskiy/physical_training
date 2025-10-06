@@ -67,7 +67,7 @@ async def get_current_user_from_token(
         user_serv=Depends(user_services),
 ) -> UserAdminGetModelSchema:
     payload = AuthServ.verify_token(raw_token)
-    user = await user_serv.repo.get_user_by_id(payload.user_id)
+    user = await user_serv.repo.find_user_id(payload.user_id, True)
     if not user:
         raise _unauthorized("User not found")
     if user.token is None:

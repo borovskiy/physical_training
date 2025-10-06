@@ -24,35 +24,29 @@ class UserServices(BaseServices):
         super().__init__()
         self.repo = UserRepository(session)
 
-    async def create_user(self, user: UserRegisterSchema):
+    async def create_user(self, user: UserRegisterSchema) -> bool:
         self.log.info("create_user")
         find_user = await self.repo.find_user_email(user.email)
         if find_user is None:
             user.password_hash = await AuthServ.hash_password(user.password_hash)
             user_dict = user.model_dump()
-            user = await self.repo.add_user(user_dict)
+            user = await self.repo.create_one_obj_model(user_dict)
             token = await AuthServ.issue_email_verify_token(user.id, TypeTokensEnum.email_verify)
             self.log.info("Create token for registration %s", token)
-            data = QeueSignupUserSchema(
-                base_url=settings.APP_BASE_URL,
-                token=token,
-                verify_token_ttl_min=settings.VERIFY_TOKEN_TTL_MIN,
-                email_to=user.email,
-                subject="Подтверждение e-mail",
-            )
+            data = QeueSignupUserSchema(token=token, email_to=user.email, subject="Подтверждение e-mail", )
             celery_app.send_task(name='tasks.email_tasks.send_signup_email_task', args=(data.model_dump(),),
                                  queue="test_queues")
-            return user
+            return True
         raise _conflict(f"User with email: {user.email} exists")
 
     async def confirm_email(self, token: str):
         try:
             token_data = AuthServ.verify_token(token)
             if token_data.type != TypeTokensEnum.email_verify.name:
-                self.log.error("Wrong token type")
+                self.log.warning("Wrong token type")
                 raise ValueError("Wrong token type")
         except Exception:
-            self.log.error("Invalid or expired token")
+            self.log.warning("Invalid or expired token")
             raise HTTPException(status_code=400, detail="Invalid or expired token")
         await self.repo.update_is_confirmed_user(token_data.user_id)
 
@@ -60,11 +54,11 @@ class UserServices(BaseServices):
         self.log.info("Try login user %s ", user_email)
         user_db = await self.repo.find_user_email(user_email)
         if user_db is None:
-            self.log.error("User not found")
+            self.log.warning("User not found")
             raise HTTPException(status_code=404, detail="User not found")
         self.log.info("Find user email %s ", user_email)
         if not await AuthServ.verify_password(user_password_hash, user_db.password_hash):
-            self.log.error("Wrong password")
+            self.log.warn("Wrong password")
             raise _forbidden("Wrong password")
         if await AuthServ.check_active_and_confirmed_user(user_db):
             if user_db.token is not None:
@@ -82,20 +76,20 @@ class UserServices(BaseServices):
         if update_user is not None:
             self.log.info("update user %s", update_user)
             return update_user
-        self.log.error("User not found")
+        self.log.warning("User not found")
         raise HTTPException(status_code=404, detail="User not found")
 
     async def update_user_admin(self, user_id: int, user: UserAdminPutModelSchema):
         self.log.info("update_user_admin id %s data %s", user_id, user.model_dump())
         user_put = await self.repo.find_user_id(user_id)
         if user_put is None:
-            self.log.error("User not found")
+            self.log.warning("User not found")
             raise HTTPException(status_code=404, detail="User not found")
         update_user = await self.repo.update_user(user.model_dump(), user_id)
         if update_user is not None:
             self.log.info("user %s", update_user)
             return update_user
-        self.log.error("User not found")
+        self.log.warning("User not found")
         raise HTTPException(status_code=404, detail="User not found")
 
     async def find_user(self, user_id: int) -> UserModel:
@@ -108,7 +102,7 @@ class UserServices(BaseServices):
             self.log.info("User remove")
             return _ok("User remove")
         else:
-            self.log.error("User not remove")
+            self.log.warning("User not remove")
             return _bad_request("User not remove")
 
     async def refresh_token(self) -> TokenResponse:

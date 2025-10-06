@@ -18,6 +18,13 @@ class CreateExerciseSchema(UpdateExerciseSchema):
     repetitions: Optional[int] = None
     count_sets: Optional[int] = None
     rest_sec: Optional[int]
+    _user_id: int | None = None
+
+    def model_dump(self, **kwargs):
+        data = super().model_dump(**kwargs)
+        if self._user_id is not None:
+            data["user_id"] = self._user_id
+        return data
 
 
 def _to_int_or_none(v: Optional[int], field: int) -> Optional[int]:

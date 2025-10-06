@@ -28,6 +28,9 @@ async def me():
 async def me_get(
         user_serv: Annotated[UserServices, Depends(user_services)],
 ):
+    """
+    authorized user profile information
+    """
     current_user = get_current_user()
     return current_user
 
@@ -38,6 +41,9 @@ async def me_put(
         data_user: UserPostModelUpdateSchema,
         user_serv: Annotated[UserServices, Depends(user_services)],
 ):
+    """
+    updating your own profile
+    """
     logger.info("Try get user service")
     result = await user_serv.update_user_profile(data_user)
     return result
@@ -49,6 +55,10 @@ async def get_user_id_for_admin(
         user_id: int,
         user_serv: Annotated[UserServices, Depends(user_services)],
 ):
+    """
+    For admin
+    user information
+    """
     logger.info("Try get user service")
     return await user_serv.find_user(user_id)
 
@@ -60,6 +70,10 @@ async def put_user_id_for_admin(
         data_user: UserAdminPutModelSchema,
         user_serv: Annotated[UserServices, Depends(user_services)],
 ):
+    """
+    For admin
+    user information profile by id
+    """
     logger.info("Try get user service")
     result = await user_serv.update_user_admin(user_id, data_user)
     return result
@@ -70,5 +84,9 @@ async def delete_user_id_for_admin(
         user_id: int,
         user_serv: Annotated[UserServices, Depends(user_services)],
 ):
+    """
+    For admin
+    user remove in DB
+    """
     logger.info("Try get user service")
     return await user_serv.remove_user(user_id)

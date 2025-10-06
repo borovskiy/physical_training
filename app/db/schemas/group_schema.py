@@ -1,4 +1,6 @@
-from typing import Sequence, List
+from typing import Sequence, List, Optional, Annotated
+
+from pydantic import Field
 
 from db.schemas.base_schema import BaseModelSchema, BaseIdSchema, BaseCreatedAndUpdateSchema
 from db.schemas.paginate_schema import PageMeta
@@ -20,6 +22,13 @@ class GroupCreateSchema(BaseModelSchema):
     /rename_group/{group_id}
     """
     name: str
+    _user_id: int | None = None
+
+    def model_dump(self, **kwargs):
+        data = super().model_dump(**kwargs)
+        if self._user_id is not None:
+            data["user_id"] = self._user_id
+        return data
 
 
 class GroupGetOneSchema(BaseIdSchema, BaseCreatedAndUpdateSchema, GroupCreateSchema):

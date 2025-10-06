@@ -23,6 +23,9 @@ async def create_exercise(
         exercise_schema: CreateExerciseSchema = Depends(parse_create_exercise_form),
         file: UploadFile = File(),
 ):
+    """
+    Create new exercises in DB
+    """
     logger.info("Try get exercise service")
     return await exercise_serv.add_exercise(exercise_schema, file)
 
@@ -33,6 +36,9 @@ async def get_exercises(
         exercise_serv: Annotated[ExerciseServices, Depends(exercise_services)],
         pagination: PaginationGet = Depends(PaginationGet),
 ):
+    """
+    get list exercises from DB by pagination
+    """
     logger.info("Try get exercise services")
     return await exercise_serv.get_exercises(pagination.limit, pagination.start)
 
@@ -43,6 +49,9 @@ async def create_exercise(
         exercise_id: int,
         exercise_serv: Annotated[ExerciseServices, Depends(exercise_services)],
 ):
+    """
+    get exercise from DB by id
+    """
     logger.info("Try get exercise services")
     return await exercise_serv.get_exercise(exercise_id)
 
@@ -54,6 +63,9 @@ async def update_exercise_data(
         exercise_serv: Annotated[ExerciseServices, Depends(exercise_services)],
         schema: UpdateExerciseSchema,
 ):
+    """
+    update data of the exercise in DB by id
+    """
     logger.info("Try get exercise services")
     result = await exercise_serv.update_exercise(exercise_id, schema)
     return result
@@ -66,6 +78,9 @@ async def update_exercise_file(
         exercise_serv: Annotated[ExerciseServices, Depends(exercise_services)],
         file: UploadFile = File(),
 ):
+    """
+    update file of the exercise in DB by id
+    """
     logger.info("Try get exercise services")
     result = await exercise_serv.update_file_exercise(exercise_id, file)
     return result
@@ -77,6 +92,9 @@ async def remove_exercises(
         exercise_id: int,
         exercise_serv: Annotated[ExerciseServices, Depends(exercise_services)],
 ):
+    """
+    delete an exercise from the database by id. In all workouts Where this exercise was, the order will be changed
+    """
     logger.info("Try get exercise services")
     result = await exercise_serv.remove_exercise_from_all_workout(exercise_id)
     return result

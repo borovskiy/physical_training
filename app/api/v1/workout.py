@@ -20,6 +20,10 @@ async def get_workouts(
         workout_serv: Annotated[WorkoutServices, Depends(workout_services)],
         pagination: PaginationGet = Depends(PaginationGet),
 ):
+    """
+    Displays all available workouts
+    Including those that will be available in groups where you were invited
+    """
     logger.info("Try get workout service")
     return await workout_serv.get_workouts(pagination.limit, pagination.start)
 
@@ -30,6 +34,10 @@ async def get_workout(
         workout_id: int,
         workout_serv: Annotated[WorkoutServices, Depends(workout_services)],
 ):
+    """
+    Displays workout by ID
+    Including those that will be available in groups to which you were invited.
+    """
     logger.info("Try get workout service")
     return await workout_serv.get_workout_id(workout_id)
 
@@ -40,17 +48,23 @@ async def create_workout(
         workout_serv: Annotated[WorkoutServices, Depends(workout_services)],
         workout_schema: WorkoutExerciseCreateSchema,
 ):
+    """
+    Creates a workout with set exercise sequences
+    """
     logger.info("Try get workout service")
     return await workout_serv.create_workout(workout_schema)
 
 
 @router.put("/update_workout/{workout_id}", response_model=WorkoutFullSchema, status_code=status.HTTP_201_CREATED,
             dependencies=[Depends(require_user_attrs())])
-async def create_workout(
+async def update_workout(
         workout_id: int,
         workout_serv: Annotated[WorkoutServices, Depends(workout_services)],
         workout_schema: WorkoutExerciseCreateSchema,
 ):
+    """
+    Updates a workout with set exercise sequences
+    """
     logger.info("Try get workout service")
     return await workout_serv.update_workout(workout_id, workout_schema)
 
@@ -61,5 +75,9 @@ async def remove_workout(
         workout_id: int,
         workout_serv: Annotated[WorkoutServices, Depends(workout_services)],
 ):
+    """
+    Deletes a workout
+    Eliminates the connection between exercise and training.
+    """
     logger.info("Try get workout service")
     return await workout_serv.remove_workout(workout_id)

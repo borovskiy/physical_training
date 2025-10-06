@@ -162,8 +162,6 @@ class CorrelationIdASGIMiddleware:
         try:
             await self.app(scope, replay_receive, send_wrapper)
         finally:
-            duration_ms = (time.perf_counter() - started) * 1000.0
-
             route_template = None
             path_params = None
             try:

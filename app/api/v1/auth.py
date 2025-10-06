@@ -14,18 +14,17 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("/signup", response_model=UserRegisterSchema)
+@router.post("/signup", response_model=bool, status_code=201)
 async def signup(sign_up_user: UserRegisterSchema,
                  user_serv: Annotated[UserServices, Depends(user_services)],
                  ):
     """
     Minimum registration:
     - accepts email/password
-    - returns a "dummy" token
+    - returns token
     """
     logger.info("Try get user service")
-    result = await user_serv.create_user(sign_up_user)
-    return result
+    return await user_serv.create_user(sign_up_user)
 
 
 @router.get("/confirm")
@@ -33,6 +32,9 @@ async def confirm_email(
         token: Annotated[str, Query(...)],
         user_serv: Annotated[UserServices, Depends(user_services)],
 ):
+    """
+    Confirmation of the registered user
+    """
     logger.info("Try get user service")
     await user_serv.confirm_email(token)
     return {"message": "Email confirmed"}
@@ -44,9 +46,9 @@ async def login(
         user_serv: Annotated[UserServices, Depends(user_services)],
 ):
     """
-    Minimum login:
+    User login:
     - checks email/password
-    - returns a "dummy" token
+    - returns token
     """
     logger.info("Try get user service")
     token = await user_serv.login_user(data_user.email, data_user.password_hash)
@@ -57,5 +59,8 @@ async def login(
 async def refresh_token(
         user_serv: Annotated[UserServices, Depends(user_services)],
 ):
+    """
+    In case you become aware of a token leak, this will help you change it
+    """
     logger.info("Try get user service")
     return await user_serv.refresh_token()

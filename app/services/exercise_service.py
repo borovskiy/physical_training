@@ -37,7 +37,7 @@ class ExerciseServices(BaseServices):
         exercise = await self.repo.get_by_id(current_user.id, exercise_id)
         self.log.info("exercise %s", exercise)
         if exercise is None:
-            self.log.error("No exercise found")
+            self.log.warn("No exercise found")
             raise _not_found("No exercise found")
         return exercise
 
@@ -45,10 +45,10 @@ class ExerciseServices(BaseServices):
         self.log.info("add exercise data %s", payload.model_dump())
         current_user = get_current_user()
         if await self.repo.get_count_exercise_user(current_user.id) >= get_limits(current_user.plan).exercises_limit:
-            self.log.error("You have reached the limit for creating exercise.")
+            self.log.warning("You have reached the limit for creating exercise.")
             raise _forbidden("You have reached the limit for creating exercise.")
-
-        new_exercise = await self.repo.add_exercise(payload.model_dump(), current_user.id)
+        payload._user_id = current_user.id
+        new_exercise = await self.repo.create_one_obj_model(payload.model_dump())
         self.log.info("New exercise %s", new_exercise)
         self.log.info("Try upload file")
         link_exercise = await self.s3.upload_upload_file(self.s3.bucket, new_exercise.get_media_url_path(file), file,
@@ -64,7 +64,7 @@ class ExerciseServices(BaseServices):
         exercise = await self.repo.get_by_id(current_user.id, exercise_id)
         self.log.info("exercise %s", exercise)
         if exercise is None:
-            self.log.error("No exercise found")
+            self.log.warning("No exercise found")
             raise _forbidden("No exercise found")
         new_exercise = await self.repo.update_exercise(schema.model_dump(), current_user.id, exercise_id)
         self.log.info("New exercise %s", new_exercise)
@@ -87,7 +87,7 @@ class ExerciseServices(BaseServices):
                 await self.s3.remove_file_url(self.s3.bucket, new_exercise.get_key(link_for_remove))
             return new_exercise
         else:
-            self.log.error("No exercise found")
+            self.log.warning("No exercise found")
             return _forbidden("No exercise found")
 
     async def remove_exercise_from_all_workout(self, exercise_id: int) -> ExerciseModel:
@@ -96,7 +96,7 @@ class ExerciseServices(BaseServices):
         exercise = await self.repo.get_by_id(current_user.id, exercise_id)
         self.log.info("exercise %s", exercise)
         if exercise is None:
-            self.log.error("No exercise found")
+            self.log.warning("No exercise found")
             _forbidden("No exercise found")
         self.log.info("remove file url")
         await self.s3.remove_file_url(self.s3.bucket, exercise.get_key_media_url_path_old())

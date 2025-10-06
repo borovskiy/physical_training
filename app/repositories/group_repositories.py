@@ -1,6 +1,6 @@
 from typing import List, Sequence, Any, Coroutine
 
-from sqlalchemy import select, func, and_, delete, update, or_, Row, RowMapping
+from sqlalchemy import select, func, and_, delete, update, or_, Row, RowMapping, exists
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, joinedload
 
@@ -10,44 +10,50 @@ from repositories.base_repositoriey import BaseRepo
 
 class GroupRepository(BaseRepo):
     def __init__(self, session: AsyncSession):
-        super().__init__()
-        self.session = session
-        self.model_group = GroupModel
+        super().__init__(session)
+        self.model = GroupModel
         self.model_member_group = GroupMemberModel
 
-    async def add_group(self, data: dict, user_id: int) -> GroupModel:
-        self.log.info(f"add_group")
-        obj = self.model_group(**data)
-        obj.user_id = user_id
-        self.session.add(obj)
-        await self.session.commit()
-        await self.session.refresh(obj)
-        return obj
+    async def get_group_user_by_id(self, id_group: int, user_id: int) -> GroupModel:
+        self.log.info("get_group_by_id")
+        stmt = (
+            select(self.model)
+            .where(
+                and_(
+                    self.model.id == id_group,
+                    self.model.user_id == user_id
+                ))
+        )
+        return await self.session.scalar(stmt)
+
+    async def check_group_exists(self, id_group: int, user_id: int) -> bool:
+        stmt = select(
+            exists().where(
+                and_(
+                    self.model.id == id_group,
+                    self.model.user_id == user_id
+                )
+            )
+        )
+        result = await self.session.scalar(stmt)
+        return bool(result)
 
     async def rename_group(self, group_name: str, group_id: int):
         self.log.info("rename_group")
-        stmt = update(self.model_group).where(self.model_group.id == group_id).values(
-            name=group_name)
-
-        await self.session.execute(stmt)
-        await self.session.commit()
+        stmt = update(self.model).where(self.model.id == group_id).values(name=group_name)
+        await self.execute_session_and_commit(stmt)
 
     async def delete_group(self, group_id: int, user_id: int) -> None:
         self.log.info("delete_group")
         stmt = (
-            delete(self.model_group)
-            .where(
-                self.model_group.id == group_id,
-                self.model_group.user_id == user_id
-            )
+            delete(self.model)
+            .where(self.model.id == group_id, self.model.user_id == user_id)
         )
         await self.remove_all_member_group_id(group_id)
-        await self.session.execute(stmt)
-        await self.session.commit()
+        await self.execute_session_and_commit(stmt)
 
     async def add_members_group(self, members_schema: List[int], id_group: int, user_id: int) -> GroupModel:
-        self.log.info("add_members_group members_schema %s id_group %s user_id %s", members_schema, id_group,
-                      user_id)
+        self.log.info("add_members_group members_schema %s id_group %s user_id %s", members_schema, id_group, user_id)
         list_members = []
         for member_id in members_schema:
             members_obj = GroupMemberModel(user_id=member_id, group_id=id_group)
@@ -56,53 +62,41 @@ class GroupRepository(BaseRepo):
         await self.session.commit()
         return await self.get_group_by_id_with_full_relation(id_group, user_id)
 
-    async def get_group_by_id(self, id_group: int, user_id: int) -> GroupModel:
-        self.log.info("get_group_by_id")
-        stmt = (
-            select(self.model_group)
-            .where(
-                and_(
-                    self.model_group.id == id_group,
-                    self.model_group.user_id == user_id
-                ))
-        )
-        return await self.session.scalar(stmt)
-
     async def get_group_by_id_with_full_relation(self, id_group: int, user_id: int) -> GroupModel:
         self.log.info("get_group_by_id_with_full_relation")
         stmt = (
-            select(self.model_group).options(joinedload(self.model_group.members)).options(
-                joinedload(self.model_group.workout))
+            select(self.model).options(joinedload(self.model.members)).options(
+                joinedload(self.model.workout))
             .where(
                 and_(
-                    self.model_group.id == id_group,
-                    self.model_group.user_id == user_id
+                    self.model.id == id_group,
+                    self.model.user_id == user_id
                 ))
         )
         return await self.session.scalar(stmt)
 
     async def get_groups_user(self, user_id: int, limit: int, start: int) -> tuple[Sequence[GroupModel], Any]:
         self.log.info("get_groups_user")
-        base_where = (self.model_group.user_id == user_id,)
+        base_where = (self.model.user_id == user_id,)
         stmt_group = (
-            select(self.model_group)
+            select(self.model)
             .where(*base_where)
-            .order_by(self.model_group.created_at.asc())
+            .order_by(self.model.created_at.asc())
             .offset(start * limit)
             .limit(limit)
         )
         groups_result = await self.session.scalars(stmt_group)
         groups = groups_result.all()
 
-        stmt_count = select(func.count()).select_from(self.model_group).where(*base_where)
+        stmt_count = select(func.count()).select_from(self.model).where(*base_where)
         total = await self.session.scalar(stmt_count)
 
         return groups, int(total)
 
     async def get_groups_user_count(self, user_id: int) -> int:
         self.log.info("get_groups_user_count")
-        base_where = (self.model_group.user_id == user_id,)
-        stmt_count = select(func.count()).select_from(self.model_group).where(*base_where)
+        base_where = (self.model.user_id == user_id,)
+        stmt_count = select(func.count()).select_from(self.model).where(*base_where)
         total = await self.session.scalar(stmt_count)
         return int(total)
 
@@ -154,8 +148,7 @@ class GroupRepository(BaseRepo):
                 self.model_member_group.user_id.in_(list_ids_members)
             )
         )
-        await self.session.execute(stmt)
-        await self.session.commit()
+        await self.execute_session_and_commit(stmt)
 
     async def remove_all_member_group_id(self, group_id: int) -> None:
         self.log.info("remove_all_member_group_id")
@@ -165,25 +158,24 @@ class GroupRepository(BaseRepo):
                 self.model_member_group.group_id == group_id,
             )
         )
-        await self.session.execute(stmt)
-        await self.session.commit()
+        await self.execute_session_and_commit(stmt)
 
     async def update_workout_in_group(self, id_group: int, id_workout: int, user_id: int) -> GroupModel:
         self.log.info("update_workout_in_group")
-        stmt = update(self.model_group).where(self.model_group.id == id_group,
-                                              self.model_group.user_id == user_id).values(workout_id=id_workout)
-        await self.session.execute(stmt)
-        await self.session.commit()
+        stmt = update(self.model).where(self.model.id == id_group,
+                                        self.model.user_id == user_id).values(workout_id=id_workout)
+        await self.execute_session_and_commit(stmt)
+
         return await self.get_group_by_id_with_full_relation(id_group, user_id)
 
     async def remove_workout_from_group(self, id_group: int) -> None:
         self.log.info("remove_workout_from_group")
         stmt = (
-            update(self.model_group)
+            update(self.model)
             .where(
-                self.model_group.id == id_group,
+                self.model.id == id_group,
             ).values(workout_id=None)
         )
-        await self.session.execute(stmt)
-        await self.session.commit()
+        await self.execute_session_and_commit(stmt)
+
         return None

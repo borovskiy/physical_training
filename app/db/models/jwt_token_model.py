@@ -4,7 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from db.base import BaseModel
 
 
-class JWTToken(BaseModel):
+class JWTTokenModel(BaseModel):
     __tablename__ = "tokens"
 
     token: Mapped[str] = mapped_column(String(600), index=True)

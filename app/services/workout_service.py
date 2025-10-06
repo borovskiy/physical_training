@@ -37,10 +37,10 @@ class WorkoutServices(BaseServices):
     async def get_workout_id(self, workout_id: int) -> WorkoutModel:
         current_user = get_current_user()
         self.log.info("Try get workout id")
-        workout = await self.repo_workout.get_workout_with_user(workout_id, current_user.id)
+        workout = await self.repo_workout.get_workout_for_user(workout_id, current_user.id)
         self.log.info("workout %s", workout)
         if workout is None:
-            self.log.error("No workout found id %s", workout_id)
+            self.log.warning("No workout found id %s", workout_id)
             raise _not_found("No workout found")
         return workout
 
@@ -66,7 +66,7 @@ class WorkoutServices(BaseServices):
 
     async def remove_workout(self, workout_id: int):
         current_user = get_current_user()
-        workout = await self.repo_workout.get_workout_with_user(workout_id, current_user.id)
+        workout = await self.repo_workout.get_workout_for_user(workout_id, current_user.id)
         if workout is None:
             raise _forbidden("No workout found")
         result = await self.repo_workout.remove_workout_id(workout)
