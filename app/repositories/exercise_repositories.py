@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.models import ExerciseModel, WorkoutExerciseModel
 from repositories.base_repositoriey import BaseRepo
+from utils.raises import _not_found
 
 
 class ExerciseRepository(BaseRepo):
@@ -29,7 +30,7 @@ class ExerciseRepository(BaseRepo):
         self.log.info(f"count all exercises {total}")
         return exercises, total
 
-    async def get_by_id(self, user_id: int, exercise_id: int | str, for_admin: bool = False) -> ExerciseModel | None:
+    async def get_by_id(self, user_id: int, exercise_id: int | str, for_admin: bool = False) -> ExerciseModel:
         self.log.info("get_by_id user_id %s exercise_id %s for admin %s", user_id, exercise_id, for_admin)
         stmt_exercise = (
             select(self.model)
@@ -39,7 +40,10 @@ class ExerciseRepository(BaseRepo):
                     *([] if for_admin else [self.model.user_id == user_id]))
             )
         )
-        return await self.execute_session_get_first(stmt_exercise)
+        exercise = await self.execute_session_get_first(stmt_exercise)
+        if exercise is None:
+            raise _not_found("Workout not found")
+        return exercise
 
     async def get_count_exercise_user(self, user_id: int) -> int:
         self.log.info("get_count_exercise_user %s", user_id)

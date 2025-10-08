@@ -19,10 +19,10 @@ def create_app() -> FastAPI:
         log_headers=False,
     )
     app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
-    app.include_router(users.router, prefix="/api/v1/users/profile", tags=["users"])
-    app.include_router(exercises.router, prefix="/api/v1/exercise", tags=["exercises"])
-    app.include_router(workout.router, prefix="/api/v1/workout", tags=["workouts"])
-    app.include_router(group.router, prefix="/api/v1/group", tags=["groups"])
+    app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
+    app.include_router(exercises.router, prefix="/api/v1/exercises", tags=["exercises"])
+    app.include_router(workout.router, prefix="/api/v1/workouts", tags=["workouts"])
+    app.include_router(group.router, prefix="/api/v1/groups", tags=["groups"])
 
     return app
 

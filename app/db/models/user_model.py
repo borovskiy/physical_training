@@ -9,6 +9,8 @@ from sqlalchemy import String, Boolean, Enum, Date
 
 from core.config import get_limits
 from db.base import BaseModel
+from utils.context import get_current_user
+from utils.raises import _forbidden
 
 
 @dataclass(frozen=True)
@@ -61,3 +63,15 @@ class UserModel(BaseModel):
 
     def get_limits(self) -> PlanLimits:
         return get_limits(self.plan)
+
+    def check_reached_limit_workouts(self, count_workouts: int) -> bool:
+        # the administrator has the right to create objects without limits
+        if count_workouts >= self.get_limits().workouts_limit and get_current_user().is_not_admin():
+            raise _forbidden("You have reached the limit for creating workouts.")
+        return False
+
+    def check_reached_limit_exercises(self, count_exercises: int) -> bool:
+        # the administrator has the right to create objects without limits
+        if count_exercises >= self.get_limits().exercises_limit and get_current_user().is_not_admin():
+            raise _forbidden("You have reached the limit for creating exercise.")
+        return False

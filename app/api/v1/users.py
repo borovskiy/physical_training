@@ -33,19 +33,6 @@ async def me_get():
     return current_user
 
 
-@router.put("/me", response_model=UserGetModelSchema, status_code=status.HTTP_200_OK,
-            dependencies=[Depends(require_user_attrs())])
-async def me_put(
-        data_user: UserPostModelUpdateSchema,
-        user_serv: Annotated[UserServices, Depends(user_services)],
-):
-    """
-    updating your own profile
-    """
-    logger.info("Try get user service")
-    return await user_serv.update_user_profile(data_user, get_current_user().id)
-
-
 @router.get("/{user_id}",
             response_model=UserAdminGetModelSchema,
             status_code=status.HTTP_200_OK,
@@ -60,6 +47,19 @@ async def get_user_id_for_admin(
     """
     logger.info("Try get user service")
     return await user_serv.find_user(user_id)
+
+
+@router.put("/me", response_model=UserGetModelSchema, status_code=status.HTTP_200_OK,
+            dependencies=[Depends(require_user_attrs())])
+async def me_put(
+        data_user: UserPostModelUpdateSchema,
+        user_serv: Annotated[UserServices, Depends(user_services)],
+):
+    """
+    updating your own profile
+    """
+    logger.info("Try get user service")
+    return await user_serv.update_user_profile(data_user, get_current_user().id)
 
 
 @router.put("/{user_id}", response_model=UserAdminPutModelSchema, status_code=status.HTTP_200_OK,

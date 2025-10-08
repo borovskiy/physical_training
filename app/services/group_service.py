@@ -102,9 +102,7 @@ class GroupServices(BaseServices):
     async def add_workout_in_group(self, group_id: int, id_workout: int):
         self.log.info("add workout in group")
         current_user = get_current_user()
-        workout = await self.workout_repo.get_workout_for_user(id_workout, current_user.id)
-        if workout is None:
-            raise _forbidden("Not found workout for you")
+        workout = await self.workout_repo.get_workout_for_user(id_workout, current_user.id, get_current_user().is_admin)
         if not await self.repo.check_group_exists(group_id, current_user.id):
             raise _forbidden("Not found group")
 

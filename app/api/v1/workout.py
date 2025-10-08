@@ -6,17 +6,17 @@ from starlette import status
 
 from core.dependencies import require_user_attrs, workout_services
 from db.schemas.paginate_schema import PaginationGet
-from db.schemas.workout_schema import WorkoutCreateSchema, WorkoutExerciseCreateSchema, WorkoutFullSchema, \
-    WorkoutPage
+from db.schemas.workout_schema import WorkoutExerciseCreateSchema, WorkoutFullSchema, WorkoutPage
 from services.workout_service import WorkoutServices
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.get("/get_workouts", response_model=WorkoutPage, status_code=status.HTTP_200_OK,
-            dependencies=[Depends(require_user_attrs())])
+@router.get("/{user_id}", response_model=WorkoutPage, status_code=status.HTTP_200_OK,
+            dependencies=[Depends(require_user_attrs(is_admin=True))])
 async def get_workouts(
+        user_id: int | None,
         workout_serv: Annotated[WorkoutServices, Depends(workout_services)],
         pagination: PaginationGet = Depends(PaginationGet),
 ):
@@ -25,7 +25,7 @@ async def get_workouts(
     Including those that will be available in groups where you were invited
     """
     logger.info("Try get workout service")
-    return await workout_serv.get_workouts(pagination.limit, pagination.start)
+    return await workout_serv.get_workouts(pagination.limit, pagination.start, user_id)
 
 
 @router.get("/{workout_id}", response_model=WorkoutFullSchema, status_code=status.HTTP_200_OK,
@@ -42,20 +42,21 @@ async def get_workout(
     return await workout_serv.get_workout_id(workout_id)
 
 
-@router.post("/create_workout", response_model=WorkoutFullSchema, status_code=status.HTTP_201_CREATED,
+@router.post("/", response_model=WorkoutFullSchema, status_code=status.HTTP_201_CREATED,
              dependencies=[Depends(require_user_attrs())])
 async def create_workout(
         workout_serv: Annotated[WorkoutServices, Depends(workout_services)],
         workout_schema: WorkoutExerciseCreateSchema,
+        user_id: int | None
 ):
     """
     Creates a workout with set exercise sequences
     """
     logger.info("Try get workout service")
-    return await workout_serv.create_workout(workout_schema)
+    return await workout_serv.create_workout(workout_schema, user_id)
 
 
-@router.put("/update_workout/{workout_id}", response_model=WorkoutFullSchema, status_code=status.HTTP_201_CREATED,
+@router.put("/{workout_id}", response_model=WorkoutFullSchema, status_code=status.HTTP_201_CREATED,
             dependencies=[Depends(require_user_attrs())])
 async def update_workout(
         workout_id: int,

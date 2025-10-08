@@ -23,8 +23,8 @@ class ExerciseServices(BaseServices):
 
     async def get_exercises(self, limit: int, start: int, user_id: int) -> ExercisePage:
         self.log.info("Try get exercises")
-        await self.repo_user.find_user_id(user_id)
-        exercises, total = await self.repo.get_all_exercise_user(user_id, limit, start)
+        exercises, total = await self.repo.get_all_exercise_user(
+            BaseServices.check_permission(get_current_user(), user_id), limit, start)
         self.log.info("exercises %s", exercises)
         self.log.info("total %s", total)
         pages = ceil(total / limit) if limit else 1
@@ -35,21 +35,12 @@ class ExerciseServices(BaseServices):
 
     async def get_exercise(self, exercise_id: int) -> ExerciseModel:
         self.log.info("Try get exercise")
-        current_user = get_current_user()
-        exercise = await self.repo.get_by_id(current_user.id, exercise_id, get_current_user().is_admin)
-        self.log.info("exercise %s", exercise)
-        if exercise is None:
-            self.log.warn("No exercise found")
-            raise _not_found("No exercise found")
-        return exercise
+        return await self.repo.get_by_id(get_current_user().id, exercise_id, get_current_user().is_admin)
 
-    async def add_exercise(self, payload: CreateExerciseSchema, file: UploadFile, user_id: int) -> ExerciseModel:
-        self.log.info("add exercise")
-        user = await self.repo_user.find_user_id(user_id, False)
-        if await self.repo.get_count_exercise_user(user_id) >= user.get_limits().exercises_limit:
-            if get_current_user().is_not_admin():
-                self.log.warning("You have reached the limit for creating exercise.")
-                raise _forbidden("You have reached the limit for creating exercise.")
+    async def create_exercise(self, payload: CreateExerciseSchema, file: UploadFile, user_id: int) -> ExerciseModel:
+        self.log.info("add_exercise")
+        user = await self.repo_user.find_user_id(BaseServices.check_permission(get_current_user(), user_id), False)
+        user.check_reached_limit_exercises(await self.repo.get_count_exercise_user(user_id))
         payload._user_id = user_id
         new_exercise = await self.repo.create_one_obj_model(payload.model_dump())
         self.log.info("New exercise %s", new_exercise)
@@ -65,9 +56,6 @@ class ExerciseServices(BaseServices):
         self.log.info("update exercise id %s", exercise_id)
         exercise = await self.repo.get_by_id(get_current_user().id, exercise_id, get_current_user().is_admin)
         self.log.info("exercise %s", exercise)
-        if exercise is None:
-            self.log.warning("No exercise found")
-            raise _forbidden("No exercise found")
         schema._user_id = exercise.user_id
         new_exercise = await self.repo.update_exercise(schema.model_dump(), exercise.user_id, exercise_id)
         self.log.info("New exercise %s", new_exercise)
@@ -77,9 +65,6 @@ class ExerciseServices(BaseServices):
         self.log.info("update file exercise id %s", exercise_id)
         exercise = await self.repo.get_by_id(get_current_user().id, exercise_id, get_current_user().is_admin)
         self.log.info("exercise %s", exercise)
-        if exercise is None:
-            self.log.warning("No exercise found")
-            return _forbidden("No exercise found")
         link_for_remove = exercise.get_key_media_url_path_old()
         self.log.info("old link %s", link_for_remove)
         name_key_file = exercise.get_media_url_path(file)
@@ -95,9 +80,6 @@ class ExerciseServices(BaseServices):
         self.log.info("remove exercise from all workout id %s", exercise_id)
         exercise = await self.repo.get_by_id(get_current_user().id, exercise_id, get_current_user().is_admin)
         self.log.info("exercise %s", exercise)
-        if exercise is None:
-            self.log.warning("No exercise found")
-            raise _forbidden("No exercise found")
         self.log.info("remove file url")
         await self.s3.remove_file_url(self.s3.bucket, exercise.get_key_media_url_path_old())
         self.log.info("remove exercise id")

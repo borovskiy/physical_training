@@ -8,6 +8,8 @@ from db.models import WorkoutModel, GroupMemberModel, ExerciseModel, GroupModel,
 from db.models.workout_model import WorkoutExerciseModel
 from db.schemas.workout_schema import WorkoutExerciseCreateSchema, ExerciseCreateSchema
 from repositories.base_repositoriey import BaseRepo
+from utils.context import get_current_user
+from utils.raises import _not_found
 
 
 class WorkoutRepository(BaseRepo):
@@ -37,7 +39,7 @@ class WorkoutRepository(BaseRepo):
                              workout_schema: WorkoutExerciseCreateSchema) -> WorkoutModel:
         self.log.info("update_workout id %s, user id %s, exercises_schema %s", workout_id, current_user_id,
                       workout_schema)
-        workout_obj = await self.get_workout_for_user(workout_id, current_user_id)
+        workout_obj = await self.get_workout_for_user(workout_id, current_user_id, get_current_user().is_admin)
         self.log.info("Workout %s", workout_obj)
         workout_obj.title = workout_schema.workout.title
         workout_obj.description = workout_schema.workout.description
@@ -58,8 +60,20 @@ class WorkoutRepository(BaseRepo):
             select(self.model).where(self.model.user_id == user_id).subquery())
         return (await self.session.execute(stmt)).scalar_one()
 
-    async def get_workout_for_user(self, workout_id: int, user_id: int) -> WorkoutModel:
+    async def get_workout_for_user(self, workout_id: int, user_id: int, for_admin: bool = False) -> WorkoutModel:
         self.log.info("get_workout_with_user workout id %s, user id %s", workout_id, user_id)
+        filters = [self.model.id == workout_id]
+        if not for_admin:
+            filters.append(
+                or_(
+                    self.model.user_id == user_id,
+                    self.model.groups.any(
+                        self.model_group.members.any(
+                            self.model_group_member.user_id == user_id
+                        )
+                    ),
+                )
+            )
         stmt = (
             select(self.model)
             .options(
@@ -67,17 +81,12 @@ class WorkoutRepository(BaseRepo):
                 selectinload(self.model.workout_exercises).selectinload(self.model_workout_exercise.exercise),
                 selectinload(self.model.exercises),
             )
-            .where(
-                self.model.id == workout_id,
-                or_(
-                    self.model.user_id == user_id,
-                    self.model.groups.any(
-                        self.model_group.members.any(self.model_group_member.user_id == user_id)
-                    ),
-                )
-            )
+            .where(*filters)
         )
-        return await self.session.scalar(stmt)
+        workout = await self.session.scalar(stmt)
+        if workout is None:
+            raise _not_found("Workout not found")
+        return workout
 
     async def get_all_workouts(self, user_id: int, limit: int, start: int):
         self.log.info("get_all_workouts user id %s limit %s start %s", user_id, limit, start)
