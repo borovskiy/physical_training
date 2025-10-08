@@ -88,7 +88,3 @@ PLAN_LIMITS_BY_NAME = {
         members_group_limit=PlanLimits.env_int("PLAN_COUNT_MEMBERS_GROUP_PRO", 1),
     ),
 }
-
-
-def get_limits(plan: PlanEnum) -> PlanLimits:
-    return PLAN_LIMITS_BY_NAME[plan.value]

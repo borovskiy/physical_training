@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.config import settings
 
 from db.models import UserModel
-from db.models.user_model import TypeTokensEnum
+from db.models.enums import TypeTokensEnum
 from db.schemas.auth_schema import PayloadToken
 from services.base_services import BaseServices
 from utils.raises import _unauthorized

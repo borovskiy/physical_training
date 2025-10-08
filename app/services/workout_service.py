@@ -1,9 +1,7 @@
 from math import ceil
-from typing import List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.config import get_limits
 from db.models import WorkoutModel
 from db.schemas.paginate_schema import PageMeta
 from db.schemas.workout_schema import WorkoutCreateSchema, WorkoutExerciseCreateSchema, WorkoutPage
@@ -12,7 +10,6 @@ from repositories.user_repository import UserRepository
 from repositories.workout_repositories import WorkoutRepository
 from services.base_services import BaseServices
 from utils.context import get_current_user
-from utils.raises import _forbidden, _not_found
 from utils.workout_utils import get_list_set_exercises_schema, check_belonging_exercise_on_user
 
 

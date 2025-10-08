@@ -3,7 +3,6 @@ from math import ceil
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.config import get_limits
 from core.s3_cloud_connector import S3CloudConnector
 from db.models import ExerciseModel
 from db.schemas.exercise_schema import CreateExerciseSchema, ExercisePage, PageMeta, UpdateExerciseSchema
@@ -11,7 +10,6 @@ from repositories.exercise_repositories import ExerciseRepository
 from repositories.user_repository import UserRepository
 from services.base_services import BaseServices
 from utils.context import get_current_user
-from utils.raises import _forbidden, _not_found
 
 
 class ExerciseServices(BaseServices):

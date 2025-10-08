@@ -12,8 +12,7 @@ from repositories.user_repository import UserRepository
 from repositories.workout_repositories import WorkoutRepository
 from services.base_services import BaseServices
 from utils.context import get_current_user
-from core.config import get_limits
-from utils.raises import _forbidden, _not_found
+from utils.raises import _forbidden
 
 
 class GroupServices(BaseServices):

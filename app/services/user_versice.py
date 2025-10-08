@@ -1,14 +1,12 @@
 from datetime import datetime, timezone
-from typing import Any, Coroutine
 
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from db.models.enums import TypeTokensEnum
 from db.schemas.auth_schema import TokenResponse
 from repositories.user_repository import UserRepository
-from core.config import settings
 from db.models import UserModel
-from db.models.user_model import TypeTokensEnum
 from db.schemas.qeue_schemas import QeueSignupUserSchema
 from db.schemas.user_schema import UserRegisterSchema, UserPostModelUpdateSchema, UserAdminPutModelSchema
 from services.auth_service import AuthServ

@@ -1,4 +1,3 @@
-import enum
 import os
 from dataclasses import dataclass
 
@@ -6,9 +5,8 @@ from typing import List
 from datetime import datetime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, Boolean, Enum, Date
-
-from core.config import get_limits
 from db.base import BaseModel
+from db.models.enums import PlanEnum
 from utils.context import get_current_user
 from utils.raises import _forbidden
 
@@ -27,16 +25,6 @@ class PlanLimits:
             return int(v) if v is not None else default
         except ValueError:
             return default
-
-
-class PlanEnum(enum.Enum):
-    free = "free"
-    pro = "pro"
-
-
-class TypeTokensEnum(enum.Enum):
-    email_verify = "email_verify"
-    access = "access"
 
 
 class UserModel(BaseModel):
@@ -62,7 +50,8 @@ class UserModel(BaseModel):
     token: Mapped["JWTTokenModel"] = relationship(back_populates="user")
 
     def get_limits(self) -> PlanLimits:
-        return get_limits(self.plan)
+        from core.config import PLAN_LIMITS_BY_NAME
+        return PLAN_LIMITS_BY_NAME[self.plan.value]
 
     def check_reached_limit_workouts(self, count_workouts: int) -> bool:
         # the administrator has the right to create objects without limits
