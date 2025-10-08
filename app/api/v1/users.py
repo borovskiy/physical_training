@@ -25,9 +25,7 @@ async def me():
 
 @router.get("/me", response_model=UserGetModelSchema, status_code=status.HTTP_200_OK,
             dependencies=[Depends(require_user_attrs())])
-async def me_get(
-        user_serv: Annotated[UserServices, Depends(user_services)],
-):
+async def me_get():
     """
     authorized user profile information
     """
@@ -45,11 +43,12 @@ async def me_put(
     updating your own profile
     """
     logger.info("Try get user service")
-    result = await user_serv.update_user_profile(data_user)
-    return result
+    return await user_serv.update_user_profile(data_user, get_current_user().id)
 
 
-@router.get("/{user_id}", response_model=UserAdminGetModelSchema, status_code=status.HTTP_200_OK,
+@router.get("/{user_id}",
+            response_model=UserAdminGetModelSchema,
+            status_code=status.HTTP_200_OK,
             dependencies=[Depends(require_user_attrs(is_admin=True))])
 async def get_user_id_for_admin(
         user_id: int,
@@ -75,8 +74,7 @@ async def put_user_id_for_admin(
     user information profile by id
     """
     logger.info("Try get user service")
-    result = await user_serv.update_user_admin(user_id, data_user)
-    return result
+    return await user_serv.update_user_profile(data_user, user_id)
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_200_OK, dependencies=[Depends(require_user_attrs(is_admin=True))])

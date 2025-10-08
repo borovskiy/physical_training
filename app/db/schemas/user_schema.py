@@ -32,6 +32,11 @@ class SystemUserSchema(BaseModelSchema):
     is_confirmed: bool
     is_admin: bool
 
+    async def is_not_admin(self) -> bool:
+        if self.is_admin is False or self.is_admin is None:
+            return True
+        return False
+
 
 class SystemUserPutSchema(BaseModelSchema):
     email: str

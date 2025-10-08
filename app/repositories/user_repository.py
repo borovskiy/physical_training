@@ -9,6 +9,7 @@ from sqlalchemy.orm import selectinload, joinedload
 from db.models import UserModel
 from db.models.jwt_token_model import JWTTokenModel
 from repositories.base_repositoriey import BaseRepo
+from utils.raises import _not_found
 
 
 class UserRepository(BaseRepo):
@@ -22,12 +23,15 @@ class UserRepository(BaseRepo):
         stmt = select(self.model).where(self.model.email == mail).options(joinedload(self.model.token))
         return await self.execute_session_get_one(stmt)
 
-    async def find_user_id(self, id_user: int, need_token: bool = False) -> UserModel | None:
+    async def find_user_id(self, id_user: int, need_token: bool = False) -> UserModel | Exception:
         self.log.info("find_user_id %s ", id_user)
         stmt = select(self.model).where(self.model.id == id_user)
         if need_token:
             stmt = stmt.options(joinedload(self.model.token))
-        return await self.execute_session_get_one(stmt)
+        result_user = await self.execute_session_get_one(stmt)
+        if result_user is None:
+            raise _not_found('User not found')
+        return result_user
 
     async def find_count_users_by_id(self, list_users_id: List[int]) -> int:
         self.log.info("find_count_users_by_id %s", list_users_id)
@@ -49,7 +53,7 @@ class UserRepository(BaseRepo):
         stmt = update(self.model).where(self.model.id == user_id).values(is_confirmed=True)
         await self.execute_session_and_commit(stmt)
 
-    async def update_user(self, data, user_id: int):
+    async def update_user(self, data, user_id: int) -> UserModel:
         self.log.info("update_user by id %s data %s", user_id, data)
         stmt = update(self.model).where(self.model.id == user_id).values(**data)
         await self.execute_session_and_commit(stmt)

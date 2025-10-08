@@ -7,6 +7,7 @@ from datetime import datetime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, Boolean, Enum, Date
 
+from core.config import get_limits
 from db.base import BaseModel
 
 
@@ -57,3 +58,6 @@ class UserModel(BaseModel):
                                                       overlaps="groups_members")
     groups_members: Mapped[List["GroupMemberModel"]] = relationship(back_populates="user", overlaps="groups")
     token: Mapped["JWTTokenModel"] = relationship(back_populates="user")
+
+    def get_limits(self) -> PlanLimits:
+        return get_limits(self.plan)

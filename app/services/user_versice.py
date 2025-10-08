@@ -15,7 +15,7 @@ from services.auth_service import AuthServ
 
 from services.base_services import BaseServices
 from utils.context import get_current_user
-from utils.raises import _forbidden, _ok, _bad_request, _conflict, _unauthorized
+from utils.raises import _forbidden, _ok, _bad_request, _conflict, _unauthorized, _not_found
 from celery_app import celery_app
 
 
@@ -32,7 +32,7 @@ class UserServices(BaseServices):
             user_dict = user.model_dump()
             user = await self.repo.create_one_obj_model(user_dict)
             token = await AuthServ.issue_email_verify_token(user.id, TypeTokensEnum.email_verify)
-            self.log.info("Create token for registration %s", token)
+            self.log.info("Create token for registration ", )
             data = QeueSignupUserSchema(token=token, email_to=user.email, subject="Подтверждение e-mail", )
             celery_app.send_task(name='tasks.email_tasks.send_signup_email_task', args=(data.model_dump(),),
                                  queue="test_queues")
@@ -71,28 +71,27 @@ class UserServices(BaseServices):
                 await AuthServ.issue_email_verify_token(user_db.id, TypeTokensEnum.access), user_db.id)
         raise _unauthorized("User is not active")
 
-    async def update_user_profile(self, user_schema: UserPostModelUpdateSchema):
-        self.log.info("update user profile %s", user_schema)
-        current_user = get_current_user()
-        update_user = await self.repo.update_user(user_schema.model_dump(), current_user.id)
+    async def update_user_profile(self, user_schema: UserPostModelUpdateSchema, user_id: int):
+        self.log.info("update user profile")
+        update_user = await self.repo.update_user(user_schema.model_dump(), user_id)
         if update_user is not None:
             self.log.info("update user %s", update_user)
             return update_user
         self.log.warning("User not found")
         raise HTTPException(status_code=404, detail="User not found")
 
-    async def update_user_admin(self, user_id: int, user: UserAdminPutModelSchema):
-        self.log.info("update_user_admin id %s data %s", user_id, user.model_dump())
+    async def update_user_admin(self, user_id: int, user: UserAdminPutModelSchema) -> UserModel | None:
+        self.log.info("update_user_admin")
         user_put = await self.repo.find_user_id(user_id)
         if user_put is None:
             self.log.warning("User not found")
-            raise HTTPException(status_code=404, detail="User not found")
+            raise _not_found("User not found")
         update_user = await self.repo.update_user(user.model_dump(), user_id)
-        if update_user is not None:
-            self.log.info("user %s", update_user)
-            return update_user
-        self.log.warning("User not found")
-        raise HTTPException(status_code=404, detail="User not found")
+        if update_user is None:
+            self.log.warning("User not found")
+            raise _not_found("User not found")
+        self.log.info("user", update_user.email)
+        return update_user
 
     async def find_user(self, user_id: int) -> UserModel:
         self.log.info("find_user")

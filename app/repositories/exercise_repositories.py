@@ -29,17 +29,15 @@ class ExerciseRepository(BaseRepo):
         self.log.info(f"count all exercises {total}")
         return exercises, total
 
-    async def get_by_id(self, user_id: int, exercise_id: int | str) -> ExerciseModel | None:
-        self.log.info("get_by_id user_id %s exercise_id %s", user_id, exercise_id)
+    async def get_by_id(self, user_id: int, exercise_id: int | str, for_admin: bool = False) -> ExerciseModel | None:
+        self.log.info("get_by_id user_id %s exercise_id %s for admin %s", user_id, exercise_id, for_admin)
         stmt_exercise = (
             select(self.model)
             .where(
                 and_(
                     self.model.id == exercise_id,
-                    self.model.user_id == user_id
-                )
+                    *([] if for_admin else [self.model.user_id == user_id]))
             )
-
         )
         return await self.execute_session_get_first(stmt_exercise)
 

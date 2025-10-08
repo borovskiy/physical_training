@@ -10,6 +10,7 @@ from db.schemas.exercise_schema import CreateExerciseSchema, ExercisePage, Updat
 from db.schemas.paginate_schema import PaginationGet
 from db.schemas.workout_schema import ExerciseFullSchema
 from services.exercise_service import ExerciseServices
+from utils.context import get_current_user
 
 logger = logging.getLogger(__name__)
 # /api/v1/exercise
@@ -27,7 +28,22 @@ async def create_exercise(
     Create new exercises in DB
     """
     logger.info("Try get exercise service")
-    return await exercise_serv.add_exercise(exercise_schema, file)
+    return await exercise_serv.add_exercise(exercise_schema, file, get_current_user().id)
+
+
+@router.post("create_exercise/{user_id}", response_model=ExerciseFullSchema, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_user_attrs(is_admin=True))])
+async def create_exercise(
+        user_id: int,
+        exercise_serv: Annotated[ExerciseServices, Depends(exercise_services)],
+        exercise_schema: CreateExerciseSchema = Depends(parse_create_exercise_form),
+        file: UploadFile = File(),
+):
+    """
+    Create new exercises in DB
+    """
+    logger.info("Try get exercise service")
+    return await exercise_serv.add_exercise(exercise_schema, file, user_id)
 
 
 @router.get("/get_exercises", response_model=ExercisePage, status_code=status.HTTP_200_OK,
@@ -40,7 +56,21 @@ async def get_exercises(
     get list exercises from DB by pagination
     """
     logger.info("Try get exercise services")
-    return await exercise_serv.get_exercises(pagination.limit, pagination.start)
+    return await exercise_serv.get_exercises(pagination.limit, pagination.start, get_current_user().id)
+
+
+@router.get("/get_exercises/{user_id}", response_model=ExercisePage, status_code=status.HTTP_200_OK,
+            dependencies=[Depends(require_user_attrs(is_admin=True))])
+async def get_exercises(
+        user_id: int,
+        exercise_serv: Annotated[ExerciseServices, Depends(exercise_services)],
+        pagination: PaginationGet = Depends(PaginationGet),
+):
+    """
+    get list exercises from DB by pagination
+    """
+    logger.info("Try get exercise services")
+    return await exercise_serv.get_exercises(pagination.limit, pagination.start, user_id)
 
 
 @router.get("/get_exercise/{exercise_id}", response_model=ExerciseFullSchema, status_code=status.HTTP_200_OK,
@@ -67,13 +97,12 @@ async def update_exercise_data_by_id(
     update data of the exercise in DB by id
     """
     logger.info("Try get exercise services")
-    result = await exercise_serv.update_exercise(exercise_id, schema)
-    return result
+    return await exercise_serv.update_exercise(exercise_id, schema)
 
 
 @router.put("/update_exercise_file/{exercise_id}", response_model=ExerciseFullSchema, status_code=status.HTTP_200_OK,
             dependencies=[Depends(require_user_attrs())])
-async def update_exercise_file(
+async def update_exercise_file_admin(
         exercise_id: int,
         exercise_serv: Annotated[ExerciseServices, Depends(exercise_services)],
         file: UploadFile = File(),
@@ -82,8 +111,7 @@ async def update_exercise_file(
     update file of the exercise in DB by id
     """
     logger.info("Try get exercise services")
-    result = await exercise_serv.update_file_exercise(exercise_id, file)
-    return result
+    return await exercise_serv.update_file_exercise(exercise_id, file)
 
 
 @router.delete("/{exercise_id}", response_model=ExerciseFullSchema, status_code=status.HTTP_200_OK,
@@ -96,5 +124,4 @@ async def remove_exercises(
     delete an exercise from the database by id. In all workouts Where this exercise was, the order will be changed
     """
     logger.info("Try get exercise services")
-    result = await exercise_serv.remove_exercise_from_all_workout(exercise_id)
-    return result
+    return await exercise_serv.remove_exercise_from_all_workout(exercise_id)
