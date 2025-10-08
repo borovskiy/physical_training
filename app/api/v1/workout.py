@@ -13,12 +13,12 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.get("/{user_id}", response_model=WorkoutPage, status_code=status.HTTP_200_OK,
+@router.get("/", response_model=WorkoutPage, status_code=status.HTTP_200_OK,
             dependencies=[Depends(require_user_attrs(is_admin=True))])
 async def get_workouts(
-        user_id: int | None,
         workout_serv: Annotated[WorkoutServices, Depends(workout_services)],
         pagination: PaginationGet = Depends(PaginationGet),
+        user_id: int | None = None,
 ):
     """
     Displays all available workouts
@@ -47,7 +47,7 @@ async def get_workout(
 async def create_workout(
         workout_serv: Annotated[WorkoutServices, Depends(workout_services)],
         workout_schema: WorkoutExerciseCreateSchema,
-        user_id: int | None
+        user_id: int | None = None,
 ):
     """
     Creates a workout with set exercise sequences

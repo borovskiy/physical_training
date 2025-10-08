@@ -75,3 +75,9 @@ class UserModel(BaseModel):
         if count_exercises >= self.get_limits().exercises_limit and get_current_user().is_not_admin():
             raise _forbidden("You have reached the limit for creating exercise.")
         return False
+
+    def check_reached_limit_group(self, count_groups: int) -> bool:
+        # the administrator has the right to create objects without limits
+        if count_groups >= self.get_limits().groups_limit and get_current_user().is_not_admin():
+            raise _forbidden("You cannot add more users to this group")
+        return False

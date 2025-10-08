@@ -17,12 +17,12 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.get("/{user_id}", response_model=ExercisePage, status_code=status.HTTP_200_OK,
+@router.get("/", response_model=ExercisePage, status_code=status.HTTP_200_OK,
             dependencies=[Depends(require_user_attrs())])
 async def get_exercises(
-        user_id: int | None,
         exercise_serv: Annotated[ExerciseServices, Depends(exercise_services)],
         pagination: PaginationGet = Depends(PaginationGet),
+        user_id: int | None = None,
 ):
     """
     get list exercises from DB by pagination
@@ -44,13 +44,13 @@ async def get_exercise_id(
     return await exercise_serv.get_exercise(exercise_id)
 
 
-@router.post("/{user_id}", response_model=ExerciseFullSchema, status_code=status.HTTP_201_CREATED,
+@router.post("/", response_model=ExerciseFullSchema, status_code=status.HTTP_201_CREATED,
              dependencies=[Depends(require_user_attrs())])
 async def create_exercise(
-        user_id: int | None,
         exercise_serv: Annotated[ExerciseServices, Depends(exercise_services)],
         exercise_schema: CreateExerciseSchema = Depends(parse_create_exercise_form),
         file: UploadFile = File(),
+        user_id: int | None = None,
 ):
     """
     Create new exercises in DB

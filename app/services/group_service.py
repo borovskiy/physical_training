@@ -21,54 +21,46 @@ class GroupServices(BaseServices):
         super().__init__()
         self.workout_repo = WorkoutRepository(session)
         self.repo = GroupRepository(session)
-        self.user_repo = UserRepository(session)
+        self.repo_user = UserRepository(session)
 
-    async def create_group(self, group_schema: GroupCreateSchema):
+    async def create_group(self, group_schema: GroupCreateSchema, user_id: int | None, ):
         self.log.info("create group")
-        current_user = get_current_user()
-        if await self.repo.get_groups_user_count(current_user.id) >= get_limits(current_user.plan).groups_limit:
-            raise _forbidden("You have reached the limit for creating groups.")
-        group_schema._user_id = current_user.id
+        user = await self.repo_user.find_user_id(BaseServices.check_permission(get_current_user(), user_id), False)
+        user.check_reached_limit_group(await self.repo.get_groups_user_count(user.id))
+        group_schema._user_id = user.id
         return await self.repo.create_one_obj_model(group_schema.model_dump())
 
     async def rename_group(self, group_id: int, group_name: str) -> GroupModel:
         self.log.info("rename group")
-        current_user = get_current_user()
-        if not await self.repo.check_group_exists(group_id, current_user.id):
-            raise _not_found("Not found group for you")
+        group = await self.repo.find_group_by_id(group_id, get_current_user().id, get_current_user().is_admin)
         await self.repo.rename_group(group_name, group_id)
-        return await self.repo.get_group_user_by_id(group_id, current_user.id)
+        return await self.repo.get_group_user_by_id(group_id, group.user_id)
 
-    async def delete_group(self, group_id: int):
-        self.log.info("delete group")
-        current_user = get_current_user()
-        if not await self.repo.check_group_exists(group_id, current_user.id):
-            raise _forbidden("Not found group for you")
-        await self.repo.delete_group(group_id, current_user.id)
-        return True
-
-    async def add_members_in_group(self, id_group: int, members_schema: List[GroupMembersAddSchema]):
+    async def add_members_in_group(self, id_group: int, members_schema: List[GroupMembersAddSchema],
+                                   user_id: int | None):
         self.log.info("add members in group")
-        current_user = get_current_user()
         list_members_id = {member.user_id for member in members_schema}
-        group = await self.repo.get_group_by_id_with_full_relation(id_group, current_user.id)
-        if group is None:
-            raise _forbidden("Not found group for you")
-        if len(group.members) >= get_limits(current_user.plan).members_group_limit:
-            raise _forbidden("You cannot add more users to this group")
+        user = await self.repo_user.find_user_id(BaseServices.check_permission(get_current_user(), user_id), False)
+        group = await self.repo.get_group_by_id_with_full_relation(id_group, user.id, get_current_user().is_admin)
+        user.check_reached_limit_group(len(group.members))
         if list_members_id & {member.id for member in group.members if member is not None}:
             raise _forbidden(
                 f"you are trying to add users that are already in the list {[member.email for member in group.members]}")
-        result = await self.user_repo.find_count_users_by_id(list(list_members_id))
-        if len(list_members_id) != result:
+        if len(list_members_id) != await self.repo_user.find_count_users_by_id(list(list_members_id)):
             raise _forbidden("Not fount user in list")
+        return await self.repo.add_members_group(list(list_members_id), id_group, group.user_id)
 
-        return await self.repo.add_members_group(list(list_members_id), id_group, current_user.id)
+    async def add_workout_in_group(self, group_id: int, id_workout: int, user_id: int | None):
+        self.log.info("add workout in group")
+        user = await self.repo_user.find_user_id(BaseServices.check_permission(get_current_user(), user_id), False)
+        await self.workout_repo.get_workout_for_user(id_workout, user.id, get_current_user().is_admin)
+        await self.repo.find_group_by_id(group_id, user.id, get_current_user().is_admin)
+        return await self.repo.update_workout_in_group(group_id, id_workout, user.id)
 
-    async def get_groups_user(self, limit: int, start: int) -> GroupPage:
+    async def get_groups_user(self, limit: int, start: int, user_id: int | None, ) -> GroupPage:
         self.log.info("get groups user")
-        current_user = get_current_user()
-        groups, total = await self.repo.get_groups_user(current_user.id, limit, start)
+        groups, total = await self.repo.get_groups_user(BaseServices.check_permission(get_current_user(), user_id),
+                                                        limit, start)
         pages = ceil(total / limit) if limit else 1
         return GroupPage(
             groups=groups,
@@ -77,33 +69,23 @@ class GroupServices(BaseServices):
 
     async def get_group_by_id(self, id_group: int) -> GroupModel:
         self.log.info("get group by id")
-        current_user = get_current_user()
-        group = await self.repo.get_group_by_id_with_full_relation(id_group, current_user.id)
-        if group is None:
-            raise _forbidden("Not found group")
-        return group
+        return await self.repo.get_group_by_id_with_full_relation(id_group, get_current_user().id,
+                                                                  get_current_user().is_admin)
 
     async def delete_members(self, members: List[GroupMembersAddSchema], group_id: int) -> GroupModel:
         self.log.info("delete members")
-        current_user = get_current_user()
-        if not await self.repo.check_group_exists(group_id, current_user.id):
-            raise _forbidden("Not found group")
+        group = await self.repo.find_group_by_id(group_id, get_current_user().id, get_current_user().is_admin)
         ids_members = [member.user_id for member in members]
         await self.repo.remove_member_group_id(ids_members, group_id)
-        return await self.repo.get_group_by_id_with_full_relation(group_id, current_user.id)
+        return await self.repo.get_group_by_id_with_full_relation(group_id, group.user_id)
 
     async def delete_workout_from_group(self, group_id: int):
         self.log.info("delete workout from group")
-        current_user = get_current_user()
-        if not await self.repo.check_group_exists(group_id, current_user.id):
-            raise _forbidden("Not found group")
+        await self.repo.find_group_by_id(group_id, get_current_user().id, get_current_user().is_admin)
         return await self.repo.remove_workout_from_group(group_id)
 
-    async def add_workout_in_group(self, group_id: int, id_workout: int):
-        self.log.info("add workout in group")
-        current_user = get_current_user()
-        workout = await self.workout_repo.get_workout_for_user(id_workout, current_user.id, get_current_user().is_admin)
-        if not await self.repo.check_group_exists(group_id, current_user.id):
-            raise _forbidden("Not found group")
-
-        return await self.repo.update_workout_in_group(group_id, id_workout, current_user.id)
+    async def delete_group(self, group_id: int):
+        self.log.info("delete group")
+        group = await self.repo.find_group_by_id(group_id, get_current_user().id, get_current_user().is_admin)
+        await self.repo.delete_group(group_id, group.user_id)
+        return True

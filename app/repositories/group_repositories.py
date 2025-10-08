@@ -6,6 +6,7 @@ from sqlalchemy.orm import selectinload, joinedload
 
 from db.models import GroupModel, GroupMemberModel
 from repositories.base_repositoriey import BaseRepo
+from utils.raises import _not_found
 
 
 class GroupRepository(BaseRepo):
@@ -26,17 +27,19 @@ class GroupRepository(BaseRepo):
         )
         return await self.session.scalar(stmt)
 
-    async def check_group_exists(self, id_group: int, user_id: int) -> bool:
+    async def find_group_by_id(self, id_group: int, user_id: int, for_admin: bool = False) -> GroupModel:
         stmt = select(
             exists().where(
                 and_(
                     self.model.id == id_group,
-                    self.model.user_id == user_id
+                    *([] if for_admin else [self.model.user_id == user_id])
                 )
             )
         )
-        result = await self.session.scalar(stmt)
-        return bool(result)
+        group = await self.execute_session_get_first(stmt)
+        if group is None:
+            raise _not_found("Group not found")
+        return group
 
     async def rename_group(self, group_name: str, group_id: int):
         self.log.info("rename_group")
@@ -62,7 +65,8 @@ class GroupRepository(BaseRepo):
         await self.session.commit()
         return await self.get_group_by_id_with_full_relation(id_group, user_id)
 
-    async def get_group_by_id_with_full_relation(self, id_group: int, user_id: int) -> GroupModel:
+    async def get_group_by_id_with_full_relation(self, id_group: int, user_id: int,
+                                                 for_admin: bool = False) -> GroupModel:
         self.log.info("get_group_by_id_with_full_relation")
         stmt = (
             select(self.model)
@@ -72,10 +76,13 @@ class GroupRepository(BaseRepo):
             .where(
                 and_(
                     self.model.id == id_group,
-                    self.model.user_id == user_id
-                ))
+                    *([] if for_admin else [self.model.user_id == user_id]))
+            )
         )
-        return await self.execute_session_get_first(stmt)
+        group = await self.execute_session_get_first(stmt)
+        if group is None:
+            raise _not_found("Group not found")
+        return group
 
     async def get_groups_user(self, user_id: int, limit: int, start: int) -> tuple[Sequence[GroupModel], Any]:
         self.log.info("get_groups_user")

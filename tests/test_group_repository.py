@@ -34,8 +34,8 @@ class TestGroupRepository:
         session.add(group)
         await session.commit()
 
-        assert await repo.check_group_exists(group.id, user.id) is True
-        assert await repo.check_group_exists(999, user.id) is False
+        assert await repo.find_group_by_id(group.id, user.id) is True
+        assert await repo.find_group_by_id(999, user.id) is False
 
     async def test_rename_and_delete_group(self, session):
         repo = GroupRepository(session)
