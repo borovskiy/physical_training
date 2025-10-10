@@ -1,6 +1,6 @@
 import pytest
 from db.models import ExerciseModel, UserModel
-from repositories.exercise_repository import ExerciseRepository
+from repositories.exercise_repositories import ExerciseRepository
 
 
 @pytest.mark.asyncio

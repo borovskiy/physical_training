@@ -1,6 +1,7 @@
 import random
 from typing import List
 from faker import Faker
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from core.config import settings
@@ -15,6 +16,11 @@ async def create_db_data(count_user: int = 5, count_exercise_for_user: int = 10,
 
     async with SessionLocal() as session:
         async with session.begin():
+            stmt = select(UserModel).limit(1)
+            result = await session.execute(stmt)
+            user_in_db = result.scalars().first()
+            if user_in_db is not None:
+                return {"response": "Database already has a user."}
             list_users: List[UserModel] = []
             for user_number in range(count_user):
                 user = UserModel(

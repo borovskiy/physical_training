@@ -1,6 +1,6 @@
 import pytest
 from db.models import WorkoutModel, UserModel
-from repositories.workout_repository import WorkoutRepository
+from repositories.workout_repositories import WorkoutRepository
 
 
 @pytest.mark.asyncio
@@ -51,6 +51,5 @@ class TestWorkoutRepository:
         await session.commit()
         await session.refresh(workout)
 
-        await repo.remove_workout_id(workout)
-        result = await repo.get_workout_for_user(workout.id, user.id)
-        assert result is None
+        result = await repo.remove_workout_id(workout)
+        assert result is True

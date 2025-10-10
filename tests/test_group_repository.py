@@ -1,6 +1,6 @@
 import pytest
 from db.models import GroupModel, UserModel
-from repositories.group_repository import GroupRepository
+from repositories.group_repositories import GroupRepository
 
 
 @pytest.mark.asyncio

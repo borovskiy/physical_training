@@ -19,8 +19,7 @@ router = APIRouter()
 
 @router.get("/create_db_data")
 async def me():
-    await create_db_data()
-    return None
+    return await create_db_data()
 
 
 @router.get("/me", response_model=UserGetModelSchema, status_code=status.HTTP_200_OK,

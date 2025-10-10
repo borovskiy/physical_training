@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from typing import List
 
+from fastapi import HTTPException
 from sqlalchemy import select, delete, update, func, insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, joinedload
+from sqlalchemy.util import await_only
 
 from db.models import UserModel
 from db.models.jwt_token_model import JWTTokenModel
@@ -43,10 +45,12 @@ class UserRepository(BaseRepo):
     async def remove_user_id(self, user_id: int) -> bool:
         self.log.info("remove_user_id %s", user_id)
         stmt = delete(self.model).where(self.model.id == user_id)
-        await self.execute_session_and_commit(stmt)
-        if self.find_user_id(user_id) is None:
-            return True
-        return False
+        await self.session.execute(stmt)
+        try:
+            await self.find_user_id(user_id)
+            return False
+        except HTTPException as e:
+            return e.detail == "Workout not found"
 
     async def update_is_confirmed_user(self, user_id):
         self.log.info("update_is_confirmed_user %s", user_id)
@@ -67,11 +71,12 @@ class UserRepository(BaseRepo):
         await self.session.refresh(obj)
         return obj.token
 
-    async def update_token_user(self, token: str, user_id: int) -> str | None:
+    async def update_token_user(self, token: str, user_id: int) -> str:
         self.log.info("update_token_user by id %s ", user_id)
         stmt = update(self.token_model).where(self.token_model.user_id == user_id).values(token=token)
         await self.execute_session_and_commit(stmt)
-        return token
+        result = await self.find_user_id(user_id, True)
+        return result.token.token
 
     async def remove_token_user(self, user_id: int) -> str | None:
         self.log.info("remove_token_user by id %s ", user_id)

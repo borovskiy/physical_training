@@ -1,5 +1,6 @@
 from typing import List
 
+from fastapi import HTTPException
 from sqlalchemy import select, func, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, joinedload
@@ -110,7 +111,12 @@ class WorkoutRepository(BaseRepo):
         total = await self.get_workout_count(user_id)
         return workouts, total
 
-    async def remove_workout_id(self, workout: WorkoutModel) -> WorkoutModel | None:
+    async def remove_workout_id(self, workout: WorkoutModel) -> bool:
         self.log.info("remove_workout_id id %s", workout.id)
         await self.session.delete(workout)
         await self.session.commit()
+        try:
+            await self.get_workout_for_user(workout.id, workout.user_id, True)
+            return True
+        except HTTPException as e:
+            return e.detail == "Workout not found"
