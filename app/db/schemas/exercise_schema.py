@@ -19,7 +19,7 @@ class CreateExerciseSchema(UpdateExerciseSchema):
     repetitions: Optional[int] = None
     count_sets: Optional[int] = None
     rest_sec: Optional[int]
-    _user_id: int | None = PrivateAttr(default=None)  # приватное поле, не видно снаружи
+    _user_id: int | None = PrivateAttr(default=None)
 
     def model_dump(self, **kwargs):
         data = super().model_dump(**kwargs)

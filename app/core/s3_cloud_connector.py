@@ -7,7 +7,7 @@ from core.config import settings
 class S3CloudConnector:
     def __init__(self):
         self.endpoint = settings.CLOUD_URL
-        self.bucket = "test-exercises"
+        self.bucket = "test-busket"
         self.session = aioboto3.Session(
             aws_access_key_id=settings.CLOUD_ACCESS_KEY,
             aws_secret_access_key=settings.CLOUD_SECRET_KEY,

@@ -35,9 +35,11 @@ class ExerciseServices(BaseServices):
         self.log.info("Try get exercise")
         return await self.repo.get_by_id(get_current_user().id, exercise_id, get_current_user().is_admin)
 
-    async def create_exercise(self, payload: CreateExerciseSchema, file: UploadFile, user_id: int) -> ExerciseModel:
+    async def create_exercise(self, payload: CreateExerciseSchema, file: UploadFile,
+                              user_id: int | None = None) -> ExerciseModel:
         self.log.info("add_exercise")
         user = await self.repo_user.find_user_id(BaseServices.check_permission(get_current_user(), user_id), False)
+        user_id = user_id if user_id is not None else user.id
         user.check_reached_limit_exercises(await self.repo.get_count_exercise_user(user_id))
         payload._user_id = user_id
         new_exercise = await self.repo.create_one_obj_model(payload.model_dump())

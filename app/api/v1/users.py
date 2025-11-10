@@ -22,8 +22,10 @@ async def me():
     return await create_db_data()
 
 
-@router.get("/me", response_model=UserGetModelSchema, status_code=status.HTTP_200_OK,
-            dependencies=[Depends(require_user_attrs())])
+@router.get("/me",
+            response_model=UserGetModelSchema,
+            status_code=status.HTTP_200_OK,
+            dependencies=[Depends(require_user_attrs(is_admin=False))])
 async def me_get():
     """
     authorized user profile information
